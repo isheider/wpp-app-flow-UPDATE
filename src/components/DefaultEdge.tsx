@@ -16,6 +16,7 @@ export function DefaultEdge({
     sourceX,
     sourceY,
     sourcePosition,
+    offset: 30,
     targetX,
     targetY,
     targetPosition,
@@ -25,7 +26,7 @@ export function DefaultEdge({
     <path
       id={id}
       style={style}
-      className="stroke-2 fill-none stroke-zinc-300"
+      className="stroke-2 fill-none stroke-zinc-500"
       d={edgePath}
       markerEnd={markerEnd}
     />
