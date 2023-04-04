@@ -3,60 +3,58 @@ import { FormHandles, SubmitHandler } from "@unform/core";
 import { Form } from "@unform/web";
 import React, { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Handle, Position } from "reactflow";
-import Input from "./Input";
 import NodeHeader from "./Nodes/NodeHeader";
-import Textarea from "./Textarea";
+import { useNodeData } from "../contexts/NodeDataContext";
 
-const MessageNodeComponent = memo(() => {
-  const [blured, setBlured] = useState(true);
+const MessageNodeComponent = memo(({ id }: any) => {
+  const { nodeData, setNodeData }: any = useNodeData();
+  const [isFocused, setIsFocused] = useState(false);
 
-  const [labelText, setLabelText] = useState<string>("");
+  const handleChange = (event: any) => {
+    const newData = {
+      ...nodeData,
+      [id]: { ...nodeData[id], content: event.target.textContent },
+    };
+    setNodeData(newData);
+  };
 
-  const inputRef = useRef<any>(null);
-  const formatVariables = useCallback((value: string) => {
-    console.log("go format");
-    const formattedValue = value.replace(
-      /(?<!<span>)%(\w+)%(?![^<]*<\/span>)/g,
-      (match: string) => {
-        return `<span class="bg-sky-400 pr-2 pl-2 inline-flex font-medium items-center  text-white rounded-xl ">${match}</span>${" "}`;
-      }
+  const text = nodeData[id]?.content || "Olá, seja bem vindo";
+
+  const stylizeVariables = (text: string) => {
+    return text.replace(
+      /(%[\w\s]+%)/g,
+      (match) =>
+        `<span class="bg-blue-600 px-2 py-[2px] font-semibold leading-none inline-flex align-center items-center text-white rounded-full">${match}</span>`
     );
+  };
 
-    inputRef.current.innerHTML = formattedValue;
-    console.log(formattedValue);
+  const handleBlur = (event: any) => {
+    handleChange(event);
+    setIsFocused(false);
+  };
 
-    return formattedValue;
-  }, []);
+  const handleFocus = () => {
+    setIsFocused(true);
+  };
 
   return (
     <div
+      contentEditable
       className="nodrag cursor-text min-h-[80px] max-h-[200px] bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
-      contentEditable={true}
-      ref={inputRef}
-      onBlur={(e: any) => formatVariables(e.target.textContent)}
-      onFocus={(e) => {
-        setBlured(false);
+      onBlur={handleBlur}
+      onFocus={handleFocus}
+      dangerouslySetInnerHTML={{
+        __html: isFocused ? text : stylizeVariables(text),
       }}
-    >
-      Olá, seja bem vindo!
-    </div>
+    ></div>
   );
 });
 
-const MessageNode = memo((props) => {
+const MessageNode = memo((props: any) => {
   const formRef = useRef<FormHandles>(null);
   const handleSubmit: SubmitHandler<FormData> = (data) => {
     console.log(formRef);
   };
-
-  // useEffect(() => {
-  //   if (inputRef.current) {
-  //     inputRef.current.addEventListener("onblur", (e: any) => {
-  //       setLabelText(formatVariables(e.target.textContent));
-  //       setBlured(true);
-  //     });
-  //   }
-  // }, [inputRef.current]);
 
   return (
     <ContextMenu.Trigger>
@@ -86,34 +84,7 @@ const MessageNode = memo((props) => {
           >
             Mensagem:
           </label>
-          <MessageNodeComponent />
-          {/* <Input
-            name="message"
-            className="nodrag min-h-[80px] max-h-[200px] bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
-            placeholder='Ex.: "Bem vindo!"'
-            dangerouslySetInnerHTML={{ __html: labelText }}
-            onChange={(e) => setLabelText(formatVariables(e.target.value))}
-          /> */}
-          {/* {blured ? (
-            <div
-              className="nodrag min-h-[80px] max-h-[200px] bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
-              dangerouslySetInnerHTML={{ __html: labelText }}
-            ></div>
-          ) : (
-            <Textarea
-              name={"message"}
-              onBlur={(e) => {
-                formatVariables(e.target.value);
-                setBlured(true);
-              }}
-              onFocus={(e) => {
-                setBlured(false);
-              }}
-              className="nodrag min-h-[80px] max-h-[200px] bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
-              placeholder='Ex.: "Bem vindo!"'
-              required
-            ></Textarea>
-          )} */}
+          <MessageNodeComponent id={props.id} />
         </Form>
       </div>
     </ContextMenu.Trigger>

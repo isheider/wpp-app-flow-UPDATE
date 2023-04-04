@@ -9,18 +9,71 @@ import Textarea from "../Textarea";
 import CreatableSelect from "react-select/creatable";
 import { FaCheckCircle, FaPlus, FaTimesCircle } from "react-icons/fa";
 import { blue, gray } from "tailwindcss/colors";
+import { useNodeData } from "../../contexts/NodeDataContext";
 
-const SetVariableNode = memo((props) => {
+const MessageNodeComponent = memo(({ id }: any) => {
+  const { nodeData, setNodeData }: any = useNodeData();
+  const [isFocused, setIsFocused] = useState(false);
+
+  const handleChange = (event: any) => {
+    const newData = {
+      ...nodeData,
+      [id]: { ...nodeData[id], content: event.target.textContent },
+    };
+    setNodeData(newData);
+  };
+
+  const text = nodeData[id]?.content || "Olá, seja bem vindo";
+
+  const stylizeVariables = (text: string) => {
+    return text.replace(
+      /(%[\w\s]+%)/g,
+      (match) =>
+        `<span class="bg-blue-600 px-2 py-[2px] font-semibold leading-none inline-flex align-center items-center text-white rounded-full">${match}</span>`
+    );
+  };
+
+  const handleBlur = (event: any) => {
+    handleChange(event);
+    setIsFocused(false);
+  };
+
+  const handleFocus = () => {
+    setIsFocused(true);
+  };
+
+  return (
+    <div
+      contentEditable
+      className="nodrag cursor-text min-h-[80px] max-h-[200px] bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+      onBlur={handleBlur}
+      onFocus={handleFocus}
+      dangerouslySetInnerHTML={{
+        __html: isFocused ? text : stylizeVariables(text),
+      }}
+    ></div>
+  );
+});
+
+const SetVariableNode = memo(({ id }: any) => {
   const formRef = useRef<FormHandles>(null);
   const handleSubmit: SubmitHandler<FormData> = (data) => {
     console.log(formRef);
   };
 
-  const [selectedVariable, setSelectedVariable] = useState<any>(null);
-
-  useEffect(() => {
-    console.log(props);
-  }, [props]);
+  const { nodeData, setNodeData }: any = useNodeData();
+  const selectedVariable = nodeData[id]?.selectedVariable || null;
+  const handleSelectedVariableChange = useCallback(
+    (newVariable: any) => {
+      setNodeData((prevNodeData: any) => {
+        return {
+          ...prevNodeData,
+          [id]: { ...(prevNodeData[id] || {}), selectedVariable: newVariable },
+        };
+      });
+    },
+    [id, setNodeData]
+  );
 
   return (
     <ContextMenu.Trigger>
@@ -57,7 +110,7 @@ const SetVariableNode = memo((props) => {
             placeholder="Escolha ou crie uma variável"
             value={selectedVariable}
             className="text-base nodrag focus:outline-0 outline-0"
-            onChange={(i: any) => setSelectedVariable(i)}
+            onChange={handleSelectedVariableChange}
             styles={{
               input: (base) => ({
                 ...base,
@@ -111,12 +164,7 @@ const SetVariableNode = memo((props) => {
           >
             Valor:
           </label>
-          <Textarea
-            name={"value"}
-            className="nodrag min-h-[80px] max-h-[200px] bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
-            placeholder="Ex.: Instagram"
-            required
-          />
+          <MessageNodeComponent id={id} />
         </Form>
       </div>
     </ContextMenu.Trigger>

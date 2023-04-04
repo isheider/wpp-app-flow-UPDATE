@@ -12,9 +12,29 @@ import Radio from "./Radio";
 import { FaCheckCircle, FaPlus, FaTimesCircle } from "react-icons/fa";
 import NodeHeader from "./Nodes/NodeHeader";
 import { blue, gray, green, zinc } from "tailwindcss/colors";
+import { useNodeData } from "../contexts/NodeDataContext";
 
 const CompareWay = memo(
-  ({ id, noCloseAllowed, removed, index, removeWay }: any) => {
+  ({
+    id,
+    noCloseAllowed,
+    removed,
+    index,
+    removeWay,
+    onChange,
+    term,
+    type,
+  }: any) => {
+    const handleInputChange = (e: any) => {
+      const { name, value } = e.target;
+      onChange(id, name, value);
+    };
+
+    const handleRadioChange = (e: any) => {
+      const { name, value } = e.target;
+      onChange(id, "type", value);
+    };
+
     return (
       <div
         style={removed ? { display: "none" } : {}}
@@ -41,12 +61,14 @@ const CompareWay = memo(
           >
             Termo:
           </label>
-          <Input
+          <input
             type="text"
             name={"term"}
             id={"term"}
             className="mb-4 bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
             placeholder='Ex.: "Pinterest"'
+            value={term}
+            onChange={handleInputChange}
             required
           />
           <label
@@ -55,102 +77,146 @@ const CompareWay = memo(
           >
             Tipo de correspondência:
           </label>
-          <Radio
-            name={"type-" + id}
-            options={[
-              { id: "exact-" + id + "-" + index, label: "EXATA" },
-              { id: "contain-" + id + "-" + index, label: "CONTÉM" },
-            ]}
-          />
+          <ul className="grid w-full gap-3 md:grid-cols-2">
+            <li>
+              <input
+                type="radio"
+                name={"type-" + id}
+                value="exact"
+                id={"exact-" + id + "-" + index}
+                className="hidden peer"
+                checked={type === "exact"}
+                onChange={handleRadioChange}
+              />
+              <label
+                htmlFor={"exact-" + id + "-" + index}
+                className="nodrag inline-flex items-center justify-center text-center w-full p-3 text-gray-500 bg-white border border-gray-200 rounded-lg cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-blue-500 peer-checked:border-blue-600 peer-checked:text-blue-600 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700"
+              >
+                <div className="block">
+                  <div className="w-full text-center text-sm font-semibold">
+                    EXATA
+                  </div>
+                </div>
+              </label>
+            </li>
+            <li>
+              <input
+                type="radio"
+                name={"type-" + id}
+                value="contain"
+                id={"contain-" + id + "-" + index}
+                className="hidden peer"
+                checked={type === "contain"}
+                onChange={handleRadioChange}
+              />
+              <label
+                htmlFor={"contain-" + id + "-" + index}
+                className="nodrag inline-flex items-center justify-center text-center w-full p-3 text-gray-500 bg-white border border-gray-200 rounded-lg cursor-pointer dark:hover:text-gray-300 dark:border-gray-700 dark:peer-checked:text-blue-500 peer-checked:border-blue-600 peer-checked:text-blue-600 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:hover:bg-gray-700"
+              >
+                <div className="block">
+                  <div className="w-full text-center text-sm font-semibold">
+                    CONTÉM
+                  </div>
+                </div>
+              </label>
+            </li>
+          </ul>
         </Scope>
       </div>
     );
   }
 );
 
-const ColorSelectorNode = memo(({ data, isConnectable }: any) => {
+const ColorSelectorNode = memo(({ id, data, isConnectable, ...rest }: any) => {
   const formRef = useRef<FormHandles>(null);
 
-  const [ways, setWays] = useState([
-    {
+  const { nodeData, setNodeData }: any = useNodeData();
+
+  // Obtenha ways e selectedVariable do nodeData
+  const ways = nodeData[id]?.ways || [];
+  const selectedVariable = nodeData[id]?.selectedVariable || null;
+
+  // Use `useEffect` para sincronizar as mudanças no `nodeData` e atualizar o componente de acordo.
+  useEffect(() => {
+    // Atualize o componente com base nas mudanças em nodeData
+  }, [nodeData]);
+  const handleChange = (wayId: any, field: any, value: any) => {
+    // if (!selectedVariable) {
+    //   return false;
+    // }
+
+    if (ways.length === 0) {
+      return false;
+    }
+
+    const updatedWays = ways.map((way: any) =>
+      way.id === wayId ? { ...way, [field]: value } : way
+    );
+
+    const newData = {
+      ...nodeData,
+      [id]: {
+        ...nodeData[id],
+        content_data: {
+          variable: selectedVariable?.label ?? null,
+        },
+        use_ways: true,
+        ways: updatedWays,
+        node: {
+          id,
+          data,
+          ...rest,
+        },
+      },
+    };
+    setNodeData(newData);
+  };
+
+  const addWay = useCallback(() => {
+    const newWay = {
       id: String(Date.now()),
       term: "",
       type: "contain",
-      removed: false,
-    },
-  ]);
-
-  const [formData, setFormData] = useState([]);
-
-  const [selectedVariable, setSelectedVariable] = useState<any>(null);
-
-  const setDataToWay = useCallback(
-    (way: string, data: any) => {
-      setWays((old: any) => {
-        var arr = [...old];
-
-        arr = arr.map((i) => {
-          if (i.id === way) {
-            return {
-              ...i,
-              ...data,
-            };
-          } else {
-            return i;
-          }
-        });
-
-        console.log(arr);
-
-        return arr;
-      });
-    },
-    [ways]
-  );
-
-  useEffect(() => {
-    console.log(formRef.current?.getData());
-  }, [formRef.current]);
-
-  const addWay = useCallback(
-    (id: string) => {
-      setWays((old: any) => [
-        ...old,
-        {
-          id,
-          term: "",
-          type: "contain",
-        },
-      ]);
-    },
-    [ways]
-  );
+    };
+    setNodeData((prevNodeData: any) => {
+      const updatedWays = [...(prevNodeData[id]?.ways || []), newWay];
+      return {
+        ...prevNodeData,
+        [id]: { ...(prevNodeData[id] || {}), ways: updatedWays },
+      };
+    });
+  }, [id, setNodeData]);
 
   const removeWay = useCallback(
-    (id: string) => {
-      var oldWays = [...ways];
-
-      var arr = [...oldWays];
-      console.log("before", arr);
-      arr = arr.map((i) => {
-        if (i.id !== id) {
-          return { ...i };
-        } else {
-          return { ...i, removed: true };
-        }
+    (wayId: string) => {
+      setNodeData((prevNodeData: any) => {
+        const updatedWays = prevNodeData[id]?.ways.filter(
+          (way: any) => way.id !== wayId
+        );
+        return {
+          ...prevNodeData,
+          [id]: { ...(prevNodeData[id] || {}), ways: updatedWays },
+        };
       });
-
-      console.log("after", [...arr]);
-      const newWays = [...arr];
-
-      setWays(newWays);
     },
-    [ways]
+    [id, setNodeData]
   );
 
   const handleSubmit: SubmitHandler<FormData> = (data) => {
     console.log(formRef);
   };
+
+  const handleSelectedVariableChange = useCallback(
+    (newVariable: any) => {
+      setNodeData((prevNodeData: any) => {
+        return {
+          ...prevNodeData,
+          [id]: { ...(prevNodeData[id] || {}), selectedVariable: newVariable },
+        };
+      });
+    },
+    [id, setNodeData]
+  );
 
   return (
     <div className="w-96 bg-white border border-gray-200 rounded-lg shadow p-[25px] dark:bg-gray-800 dark:border-gray-700">
@@ -158,31 +224,31 @@ const ColorSelectorNode = memo(({ data, isConnectable }: any) => {
         type="target"
         id="top"
         position={Position.Top}
-        className="-top-10  border-[6px] border-gray-50 bg-gray-400 w-7 h-7 "
+        className="-top-10 border-[6px] border-gray-50 bg-gray-400 w-7 h-7 "
         onConnect={(params) => console.log("handle onConnect", params)}
         isConnectable={isConnectable}
       />
       {/* <div>
-        Custom Color Picker Node: <strong>{data.color}</strong>
-      </div> */}
-
+Custom Color Picker Node: <strong>{data.color}</strong>
+</div> */}
       <NodeHeader
-        title="Capturar e comparar"
+        title="Comparar"
         color="bg-blue-500"
-        message="Faça caminhos no fluxo de acordo com o texto digitado pelo usuário"
+        message="Faça caminhos no fluxo de acordo com o texto presente na variável"
       />
       <h3 className="flex justify-between items-center mt-[-5px] mb-2 text-base font-medium text-gray-900 dark:text-white">
-        Salvar conteúdo:
+        Variável:
         {selectedVariable && <FaCheckCircle color={blue["500"]} size={15} />}
       </h3>
+
       <CreatableSelect
         isClearable
         noOptionsMessage={() => "Digite um nome de variável para criá-la"}
         formatCreateLabel={(v) => `Criar "${v}"`}
         placeholder="Escolha ou crie uma variável"
-        value={selectedVariable}
         className="text-base nodrag focus:outline-0 outline-0"
-        onChange={(i: any) => setSelectedVariable(i)}
+        value={selectedVariable}
+        onChange={handleSelectedVariableChange}
         styles={{
           input: (base) => ({
             ...base,
@@ -230,46 +296,37 @@ const ColorSelectorNode = memo(({ data, isConnectable }: any) => {
           },
         ]}
       />
+      <div className="nodrag mt-2 text-[14px] text-gray-600">
+        Selecione uma variável que será comparada
+      </div>
 
-      <Form ref={formRef} onSubmit={handleSubmit}>
-        <>
-          {ways.map((way, index, array) => {
-            return (
-              <>
-                <CompareWay
-                  index={index}
-                  setDataToWay={setDataToWay}
-                  term={way.term}
-                  type={way.type}
-                  removed={way?.removed ? true : false}
-                  removeWay={removeWay}
-                  noCloseAllowed={index === 0}
-                  id={way.id}
-                  key={index}
-                />
-
-                {index === array.length - 1 && (
-                  <div
-                    onClick={() => addWay(String(Date.now()))}
-                    className="cursor-pointer w-9 mt-4 ml-auto mr-auto h-8 items-center flex text-center justify-center bg-gray-300 rounded-md text-gray-700"
-                  >
-                    <FaPlus />
-                  </div>
-                )}
-              </>
-            );
-          })}
-        </>
+      <Form
+        ref={formRef}
+        onSubmit={handleSubmit}
+        onChange={() => {}}
+        className="nodrag"
+      >
+        {ways.map((way: any, index: number) => (
+          <CompareWay
+            key={way.id}
+            id={way.id}
+            index={index}
+            noCloseAllowed={index === 0}
+            removeWay={removeWay}
+            onChange={handleChange}
+            term={way.term}
+            type={way.type}
+          />
+        ))}
+        <button
+          type="button"
+          className="nodrag mt-4 py-4 flex flex-row items-center align-center justify-center w-full font-semibold text-base bg-blue-200 focus:outline-0 border-0 text-blue-800 rounded-lg p-2"
+          onClick={addWay}
+        >
+          <FaPlus className="mr-4" fontSize={14} />
+          Adicionar caminho
+        </button>
       </Form>
-
-      {/* <input className="nodrag" name="term" type="text" onChange={data.onChange} defaultValue={data.term} /> */}
-      {/* <Handle
-        type="source"
-        position={Position.Bottom}
-        className="-bottom-10 bg-gray-300 w-5 h-5 border-4 border-gray-700"
-        id="bottom"
-        isConnectable={isConnectable}
-      /> */}
     </div>
   );
 });
