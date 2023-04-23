@@ -21,6 +21,8 @@ import ReactFlow, {
   Connection,
 } from "reactflow";
 
+import { useParams } from "react-router-dom";
+
 import { NodeDataProvider, useNodeData } from "../contexts/NodeDataContext";
 
 import "reactflow/dist/style.css";
@@ -50,15 +52,7 @@ const initialNodes: InitialNode[] = [
     id: "1",
     position: { x: 200, y: 400 },
     data: {},
-    type: "selector",
-  },
-
-  {
-    id: "2",
-    position: { x: 800, y: 400 },
-
-    data: { onChange: () => {}, color: "#ffffff" },
-    type: "selector",
+    type: "startNode",
   },
 ];
 
@@ -158,16 +152,25 @@ export function Canvas() {
     [reactFlowInstance]
   );
 
+  const { templateId } = useParams();
+
   useEffect(() => {
     async function load() {
-      const { data } = await axios.get(
-        `https://3333-isaquecastr-wppappbacke-4b3wz0fz0lg.ws-us93.gitpod.io/templates/64268b4b76ea4d5e4f2b2e2c`
-      );
+      if (templateId) {
+        if (templateId === "new") {
+        } else {
+          const { data } = await axios.get(
+            `${
+              import.meta.env.VITE_API_URL ?? "http://localhost:3333"
+            }/templates/64268b4b76ea4d5e4f2b2e2c`
+          );
 
-      if (data) {
-        setNodeData(data.flowData.nodeData);
-        setNodes(data.flowData.nodes);
-        setEdges(data.flowData.edges);
+          if (data) {
+            setNodeData(data.flowData.nodeData);
+            setNodes(data.flowData.nodes);
+            setEdges(data.flowData.edges);
+          }
+        }
       }
     }
     load();
@@ -539,7 +542,7 @@ export function Canvas() {
     //     id: "reactflow__edge-21680558423299-1680558728593top",
     //   },
     // ]);
-  }, []);
+  }, [templateId]);
 
   const getInfo = useCallback(() => {
     function transformObjectsToBlocks(flowData, nodeData) {
@@ -653,7 +656,9 @@ export function Canvas() {
     };
 
     axios.put(
-      `https://3333-isaquecastr-wppappbacke-4b3wz0fz0lg.ws-us93.gitpod.io/templates/64268b4b76ea4d5e4f2b2e2c`,
+      `${
+        import.meta.env.VITE_API_URL ?? "http://localhost:3333"
+      }/templates/64268b4b76ea4d5e4f2b2e2c`,
       data
     );
 
@@ -672,10 +677,15 @@ export function Canvas() {
 
   return (
     <>
+      <NavBar back="/flows" title="Flow 1" />
+
       {/* <NavBar /> */}
       <ReactFlowProvider>
         <ContextMenu.Root>
-          <div className="reactflow-wrapper h-full" ref={reactFlowWrapper}>
+          <div
+            className="reactflow-wrapper relative h-full w-full"
+            ref={reactFlowWrapper}
+          >
             <ReactFlow
               nodeTypes={NODE_TYPES}
               edgeTypes={EDGE_TYPES}
@@ -717,7 +727,7 @@ export function Canvas() {
               <Background gap={12} size={2} color={zinc["200"]} />
             </ReactFlow>
             <button
-              className="fixed right-10 top-10 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+              className="absolute right-10 top-10 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
               onClick={getInfo}
             >
               Salvar

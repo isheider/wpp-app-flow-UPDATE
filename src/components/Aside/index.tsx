@@ -7,6 +7,8 @@ import {
   FaMicrophone,
 } from "react-icons/fa";
 
+import { Link } from "react-router-dom";
+
 import { ImTree } from "react-icons/im";
 
 import { GiTalk } from "react-icons/gi";
@@ -88,10 +90,12 @@ export default function () {
   };
 
   return (
-    <Toolbar.Root className=" fixed p-6 top-1/2 left-20  -translate-y-1/2 bg-gray-50 rounded-2xl shadow-lg border border-zinc-300 h-5/6 w-80 overflow-hidden">
-      <span className="block cursor-pointer mb-4">
-        <FaArrowLeft size={22} />
-      </span>
+    <Toolbar.Root className="absolute p-6 top-1/2 left-20  -translate-y-1/2 bg-gray-50 rounded-2xl shadow-lg border border-zinc-300 h-5/6 w-80 overflow-hidden">
+      {/* <span className="block cursor-pointer mb-4">
+        <Link to="/flows">
+          <FaArrowLeft size={22} />
+        </Link>
+      </span> */}
       <h1 className="block text-2xl font-bold mb-3 text-gray-900 dark:text-white">
         Widgets
       </h1>

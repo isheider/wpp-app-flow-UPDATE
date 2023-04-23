@@ -1,7 +1,25 @@
-const NavBar = () => {
+interface INavBar {
+  title?: string;
+  back?: string;
+}
+
+import { FaArrowLeft } from "react-icons/fa";
+import { Link } from "react-router-dom";
+
+const NavBar: React.FC<INavBar> = ({ title, back }) => {
   return (
     <nav className="border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
       <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+        <div className="flex items-center">
+          {back && (
+            <Link to={back}>
+              <FaArrowLeft className="mr-4" size={22} />
+            </Link>
+          )}
+          <span className="text-2xl font-semibold whitespace-nowrap dark:text-white">
+            {title ? title : "BotSimples"}
+          </span>
+        </div>
         <button
           data-collapse-toggle="navbar-solid-bg"
           type="button"
@@ -32,31 +50,16 @@ const NavBar = () => {
                 className="block py-2 pl-3 pr-4 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 md:dark:text-blue-500 dark:bg-blue-600 md:dark:bg-transparent"
                 aria-current="page"
               >
-                Home
+                Fluxos
               </a>
             </li>
+
             <li>
               <a
                 href="#"
                 className="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent"
               >
-                Services
-              </a>
-            </li>
-            <li>
-              <a
-                href="#"
-                className="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent"
-              >
-                Pricing
-              </a>
-            </li>
-            <li>
-              <a
-                href="#"
-                className="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent"
-              >
-                Contact
+                Sair
               </a>
             </li>
           </ul>

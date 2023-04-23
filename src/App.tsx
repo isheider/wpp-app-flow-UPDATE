@@ -1,12 +1,6 @@
-import './styles/global.css'
-
 import { Canvas } from "./components/Canvas";
+import RoutesWrapper from "./routes";
 
 export function App() {
-  return (
-    <div style={{ height: '100vh', width: '100vw' }}>
-      <Canvas />
-    </div>
-  )
+  return <RoutesWrapper />;
 }
-
