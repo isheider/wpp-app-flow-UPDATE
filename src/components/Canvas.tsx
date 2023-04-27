@@ -19,9 +19,12 @@ import ReactFlow, {
   EdgeMarkerType,
   MarkerType,
   Connection,
+  getConnectedEdges,
 } from "reactflow";
 
-import { useParams } from "react-router-dom";
+import { Oval } from "react-loader-spinner";
+
+import { useParams, useNavigate } from "react-router-dom";
 
 import { NodeDataProvider, useNodeData } from "../contexts/NodeDataContext";
 
@@ -31,6 +34,7 @@ import { Square } from "./Square";
 import CompareTextNode from "./CompareTextNode";
 import MessageNode from "./MessageNode";
 import NavBar from "./NavBar";
+import MidiaNode from "./Nodes/midias/MidiaNode";
 import ImageNode from "./Nodes/SendImageNode";
 import VideoNode from "./Nodes/SendVideoNode";
 import AudioNode from "./Nodes/SendAudioNode";
@@ -42,6 +46,7 @@ import CaptureTextNode from "./Nodes/CaptureTextNode";
 import { DefaultEdge } from "./DefaultEdge";
 import Aside from "./Aside";
 import axios from "axios";
+import api from "../services/api";
 
 interface InitialNode extends Node {
   type: keyof typeof NODE_TYPES;
@@ -70,6 +75,7 @@ const NODE_TYPES = {
   selector: CompareTextNode,
   messageNode: MessageNode,
   imageNode: ImageNode,
+  midiaNode: MidiaNode,
   videoNode: VideoNode,
   audioNode: AudioNode,
   delayNode: DelayNode,
@@ -96,6 +102,28 @@ export function Canvas() {
       return setEdges((eds) => addEdge(params, eds));
     },
     [setEdges]
+  );
+
+  const handleDeleteNode = useCallback(
+    (id: any) => {
+      // const currentNode = nodes.filter((node) => node.id == id);
+
+      setNodes((nds) => {
+        const current = nds.filter((node) => node.id == id);
+        const left = nds.filter((node) => node.id !== id);
+
+        setEdges((eds) => {
+          console.log(current);
+          const connecteds = getConnectedEdges(current, eds);
+          console.log("connecteds", connecteds);
+
+          return eds;
+        });
+
+        return nds;
+      });
+    },
+    [nodes, edges]
   );
 
   const handleAddNode = useCallback((type: any) => {
@@ -144,7 +172,7 @@ export function Canvas() {
         id: String(Date.now()),
         type,
         position,
-        data: { label: `${type} node` },
+        data: { label: `${type} node`, handleDeleteNode },
       };
 
       setNodes((nds) => nds.concat(newNode));
@@ -154,22 +182,45 @@ export function Canvas() {
 
   const { templateId } = useParams();
 
+  const [loadingSave, setLoadingSave] = useState(false);
+  const [loadingFlow, setLoadingFlow] = useState(true);
+
+  const [currentFlowName, setCurrentFlowName] = useState<any>(null);
+
+  const [currentActive, setCurrentActive] = useState<boolean>(false);
+
+  const handleChangeCurrentName = useCallback(
+    (text) => {
+      setCurrentFlowName(text);
+    },
+    [currentFlowName]
+  );
+
   useEffect(() => {
     async function load() {
       if (templateId) {
         if (templateId === "new") {
+          setLoadingFlow(false);
+          setCurrentFlowName("Fluxo sem título");
         } else {
+          setLoadingFlow(true);
           const { data } = await axios.get(
             `${
               import.meta.env.VITE_API_URL ?? "http://localhost:3333"
-            }/templates/64268b4b76ea4d5e4f2b2e2c`
+            }/templates/${templateId}`
           );
+
+          // 64268b4b76ea4d5e4f2b2e2c
 
           if (data) {
             setNodeData(data.flowData.nodeData);
             setNodes(data.flowData.nodes);
             setEdges(data.flowData.edges);
+            setCurrentFlowName(data.name);
+            setCurrentActive(data.active);
           }
+
+          setLoadingFlow(false);
         }
       }
     }
@@ -544,9 +595,18 @@ export function Canvas() {
     // ]);
   }, [templateId]);
 
-  const getInfo = useCallback(() => {
+  const navigate = useNavigate();
+
+  const handleSave = useCallback(async () => {
     function transformObjectsToBlocks(flowData, nodeData) {
       const { edges, nodes } = flowData;
+
+      const areConnecteds = getConnectedEdges(nodes, edges);
+      console.log("connects", areConnecteds);
+
+      const connectedIds = areConnecteds.map((i) => i.id);
+
+      console.log(edges.filter((i) => connectedIds.indexOf(i.id) === -1));
 
       // Crie um mapa de conexões (sourceId: [targetId])
       const connections = edges.reduce((acc, edge) => {
@@ -655,13 +715,31 @@ export function Canvas() {
       },
     };
 
-    axios.put(
-      `${
-        import.meta.env.VITE_API_URL ?? "http://localhost:3333"
-      }/templates/64268b4b76ea4d5e4f2b2e2c`,
-      data
-    );
+    if (templateId) {
+      if (templateId === "new") {
+        setLoadingSave(true);
+        const { data: responseData } = await api.post(`/templates`, {
+          ...data,
+          name: currentFlowName,
+          active: currentActive,
+        });
 
+        if (responseData && responseData._id) {
+          navigate(`/flows/${responseData._id}`);
+        }
+
+        setLoadingSave(false);
+      } else {
+        setLoadingSave(true);
+        await api.put(`/templates/${templateId}`, {
+          ...data,
+          name: currentFlowName,
+          active: currentActive,
+        });
+
+        setLoadingSave(false);
+      }
+    }
     console.log({ nodes, edges });
     console.log(nodeData);
     console.log(data);
@@ -673,11 +751,35 @@ export function Canvas() {
     //   reactFlowInstance,
     //   reactFlowWrapper
     // })
+  }, [nodes, edges, nodeData, templateId, currentActive, currentFlowName]);
+
+  useEffect(() => {
+    console.log({
+      nodes,
+      edges,
+      nodeData,
+    });
   }, [nodes, edges, nodeData]);
+
+  async function handleChangeActive(active) {
+    if (templateId) {
+      if (templateId === "new") {
+        setCurrentActive(active);
+      } else {
+        setCurrentActive(active);
+      }
+    }
+  }
 
   return (
     <>
-      <NavBar back="/flows" title="Flow 1" />
+      <NavBar
+        back="/flows"
+        title={!currentFlowName ? "" : null}
+        editable={currentFlowName}
+        editableInitialValue={currentFlowName}
+        editableValueChangeHandle={handleChangeCurrentName}
+      />
 
       {/* <NavBar /> */}
       <ReactFlowProvider>
@@ -689,8 +791,8 @@ export function Canvas() {
             <ReactFlow
               nodeTypes={NODE_TYPES}
               edgeTypes={EDGE_TYPES}
-              nodes={nodes}
-              edges={edges}
+              nodes={loadingFlow ? [] : nodes}
+              edges={loadingFlow ? [] : edges}
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
               maxZoom={10}
@@ -726,14 +828,44 @@ export function Canvas() {
               <Controls />
               <Background gap={12} size={2} color={zinc["200"]} />
             </ReactFlow>
-            <button
-              className="absolute right-10 top-10 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
-              onClick={getInfo}
-            >
-              Salvar
-            </button>
+            {loadingSave ? (
+              <Oval
+                height={40}
+                width={40}
+                color="blue"
+                wrapperStyle={{}}
+                wrapperClass="absolute right-10 top-10"
+                visible={true}
+                ariaLabel="oval-loading"
+                secondaryColor="blue"
+                strokeWidth={2}
+                strokeWidthSecondary={2}
+              />
+            ) : (
+              <div className="flex items-center absolute right-10 top-10">
+                <label className="relative mr-4 inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    value=""
+                    className="sr-only peer"
+                    checked={currentActive}
+                    onChange={(e) => handleChangeActive(e.target.checked)}
+                  />
+                  <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                  <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+                    {currentActive ? "Ativo" : "Inativo"}
+                  </span>
+                </label>
+                <button
+                  className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                  onClick={handleSave}
+                >
+                  Salvar
+                </button>
+              </div>
+            )}
 
-            <Aside />
+            {!loadingFlow && <Aside />}
           </div>
         </ContextMenu.Root>
       </ReactFlowProvider>

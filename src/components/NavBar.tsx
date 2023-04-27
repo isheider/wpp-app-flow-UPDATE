@@ -1,12 +1,61 @@
 interface INavBar {
   title?: string;
   back?: string;
+  editable?: boolean;
+  editableInitialValue?: string;
+  editableValueChangeHandle?: string;
 }
 
 import { FaArrowLeft } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
-const NavBar: React.FC<INavBar> = ({ title, back }) => {
+import { FaPencilAlt, FaCheck } from "react-icons/fa";
+import { FiEdit2, FiSave } from "react-icons/fi";
+import { useState } from "react";
+
+const EditableText = ({ initialValue, onSave }: any) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [text, setText] = useState(initialValue);
+
+  const handleSave = () => {
+    onSave(text);
+    setIsEditing(false);
+  };
+
+  const handleToggleEdit = () => {
+    setIsEditing(!isEditing);
+  };
+
+  return (
+    <div className="flex items-center">
+      {isEditing ? (
+        <input
+          type="text"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          className="border text-xl  h-10 font-semibold border-gray-300 p-1 rounded-md"
+        />
+      ) : (
+        <span className="text-xl h-10  flex items-center leading-none font-semibold">
+          {text}
+        </span>
+      )}
+      <button
+        onClick={isEditing ? handleSave : handleToggleEdit}
+        className="ml-2 w-8 h-8 bg-orange-500 text-base text-white rounded-full flex items-center justify-center focus:outline-none hover:bg-orange-600"
+      >
+        {isEditing ? <FaCheck /> : <FaPencilAlt />}
+      </button>
+    </div>
+  );
+};
+const NavBar: React.FC<INavBar> = ({
+  title,
+  editable,
+  editableValueChangeHandle,
+  editableInitialValue,
+  back,
+}) => {
   return (
     <nav className="border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
       <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
@@ -16,8 +65,20 @@ const NavBar: React.FC<INavBar> = ({ title, back }) => {
               <FaArrowLeft className="mr-4" size={22} />
             </Link>
           )}
-          <span className="text-2xl font-semibold whitespace-nowrap dark:text-white">
-            {title ? title : "BotSimples"}
+          <span
+            className="text-xl pb-[4px]
+leading-none font-semibold whitespace-nowrap dark:text-white"
+          >
+            {editable ? (
+              <EditableText
+                initialValue={editableInitialValue}
+                onSave={editableValueChangeHandle}
+              />
+            ) : title ? (
+              title
+            ) : (
+              "BotSimples"
+            )}
           </span>
         </div>
         <button

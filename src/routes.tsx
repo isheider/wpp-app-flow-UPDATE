@@ -1,5 +1,9 @@
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {
+  redirect,
+  createBrowserRouter,
+  RouterProvider,
+} from "react-router-dom";
 
 import Root from "./pages/root";
 import Login from "./pages/login";
@@ -9,7 +13,19 @@ import Template from "./pages/template";
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Root />,
+    loader: async () => {
+      throw redirect("/flows");
+      // const user = await fake.getUser();
+      // if (!user) {
+      //   // if you know you can't render the route, you can
+      //   // throw a redirect to stop executing code here,
+      //   // sending the user to a new route
+      // }
+
+      // // otherwise continue
+      // const stats = await fake.getDashboardStats();
+      // return { user, stats };
+    },
   },
   {
     path: "/flows",

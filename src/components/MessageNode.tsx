@@ -18,7 +18,7 @@ const MessageNodeComponent = memo(({ id }: any) => {
     setNodeData(newData);
   };
 
-  const text = nodeData[id]?.content || "Olá, seja bem vindo";
+  const text = nodeData[id]?.content || "Seu texto aqui";
 
   const stylizeVariables = (text: string) => {
     return text.replace(
@@ -56,6 +56,10 @@ const MessageNode = memo((props: any) => {
     console.log(formRef);
   };
 
+  useEffect(() => {
+    console.log(props);
+  }, [props]);
+
   return (
     <ContextMenu.Trigger>
       <div className="w-96 bg-white border border-gray-200 rounded-lg shadow p-[25px] dark:bg-gray-800 dark:border-gray-700">
@@ -75,6 +79,8 @@ const MessageNode = memo((props: any) => {
         <NodeHeader
           title=" Enviar mensagem"
           color="bg-green-500"
+          nodeId={props.id}
+          handleDeleteNode={props.data.handleDeleteNode}
           message="Envie uma mensagem de texto para o usuário"
         />
         <Form ref={formRef} onSubmit={handleSubmit}>

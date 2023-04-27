@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import NavBar from "../components/NavBar";
 
 import { Link } from "react-router-dom";
@@ -6,11 +6,26 @@ import api from "../services/api";
 import { Oval } from "react-loader-spinner";
 
 export default function TemplatesList() {
+  const [loadingFlows, setLoadingFlows] = useState(true);
+
   const FlowItem = ({ title, active, triggers, id }: any) => {
+    const [currentActive, setCurrentActive] = useState<any>(active);
+    const [loadingItem, setLoadingItem] = useState(false);
+
+    async function handleActive(activeT: boolean) {
+      setLoadingItem(true);
+      setCurrentActive(activeT);
+      await api.put(`/templates/${id}`, { active: activeT });
+
+      setLoadingItem(false);
+    }
+
     return (
       // tailwind class name group to make a responsive card grid
 
-      <div className="max-w-sm h-[270px] w-[320px] mr-3 flex flex-col justify-between mb-3 p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
+      <div
+        className={`max-w-sm h-[270px] w-[300px] mr-3 inline-flex flex-col justify-between mb-3 p-6 bg-white border border-gray-200 rounded-lg shadow dark:bg-gray-800 dark:border-gray-700`}
+      >
         <div className="top">
           <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
             {title}
@@ -48,18 +63,36 @@ export default function TemplatesList() {
             </svg>
           </Link>
 
-          <label className="relative ml-4 inline-flex items-center cursor-pointer">
-            <input
-              type="checkbox"
-              value=""
-              className="sr-only peer"
-              checked={active}
+          {loadingItem ? (
+            <Oval
+              height={20}
+              width={20}
+              color="blue"
+              wrapperStyle={{}}
+              wrapperClass="ml-4"
+              visible={true}
+              ariaLabel="oval-loading"
+              secondaryColor="blue"
+              strokeWidth={2}
+              strokeWidthSecondary={2}
             />
-            <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-            <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
-              {active ? "Ativo" : "Inativo"}
-            </span>
-          </label>
+          ) : (
+            <label
+              className={`relative ml-4 inline-flex items-center cursor-pointer`}
+            >
+              <input
+                type="checkbox"
+                value=""
+                className="sr-only peer"
+                checked={currentActive}
+                onChange={(e) => handleActive(e.target.checked)}
+              />
+              <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+              <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+                {currentActive ? "Ativo" : "Inativo"}
+              </span>
+            </label>
+          )}
         </div>
       </div>
     );
@@ -68,49 +101,101 @@ export default function TemplatesList() {
   const [qrCode, setQrCode] = useState<string | null>(null);
 
   const [connected, setConnected] = useState(false);
+  const [canShowQr, setCanShowQr] = useState(false);
+
+  async function showQr() {
+    setCanShowQr(true);
+    const response = await api.get(
+      "/users/641428ac4c89cd28836b09fa/wpp-connect"
+    );
+    // if (!response.data.connected) {
+    setTimeout(async () => {
+      const response2 = await api.get(
+        "/users/641428ac4c89cd28836b09fa/qr-code"
+      );
+      if (response2.data.qrcode) {
+        setQrCode(response2.data.qrcode);
+      } else {
+        setTimeout(async () => {
+          const response3 = await api.get(
+            "/users/641428ac4c89cd28836b09fa/qr-code"
+          );
+          if (response3.data.qrcode) {
+            setQrCode(response3.data.qrcode);
+          } else {
+            setTimeout(async () => {
+              const response3 = await api.get(
+                "/users/641428ac4c89cd28836b09fa/qr-code"
+              );
+              if (response3.data.qrcode) {
+                setQrCode(response3.data.qrcode);
+              }
+            }, 3000);
+          }
+        }, 3000);
+      }
+    }, 3000);
+    // }
+  }
+
+  async function logout() {
+    const response = await api.delete(
+      "/users/641428ac4c89cd28836b09fa/wpp-logout"
+    );
+    setConnected(false);
+    setCanShowQr(false);
+  }
 
   const [instance, setInstance] = useState<any>(null);
+  const [loadedStatus, setLoadedStatus] = useState<any>(false);
 
   const [flows, setFlows] = useState<any>([]);
 
+  const [alreadyRun, setAlreadyRun] = useState(false);
+  const hasRun = useRef(false);
+
   useEffect(() => {
     async function load() {
-      setQrCode(null);
-
-      const response1 = await api.get(
-        "/users/641428ac4c89cd28836b09fa/wpp-status"
-      );
-
-      const { data: flowsData } = await api.get("/templates");
-
-      if (flowsData && flowsData.length > 0) {
-        setFlows(flowsData);
-      }
-
-      if (response1.data.connected) {
+      if (!hasRun.current) {
         setQrCode(null);
-        setInstance(response1.data.instance);
-        setConnected(true);
-        return null;
-      }
 
-      const response = await api.get(
-        "/users/641428ac4c89cd28836b09fa/wpp-connect"
-      );
-      if (!response1.data.connected) {
-        setTimeout(async () => {
-          const response2 = await api.get(
-            "/users/641428ac4c89cd28836b09fa/qr-code"
-          );
-          if (response2.data.qrcode) {
-            setQrCode(response2.data.qrcode);
+        const response1 = await api.get(
+          "/users/641428ac4c89cd28836b09fa/wpp-status"
+        );
+
+        if (response1.data.connected) {
+          setQrCode(null);
+          setInstance(response1.data.instance);
+          setConnected(true);
+          setLoadedStatus(true);
+
+          setLoadingFlows(true);
+          const { data: flowsData } = await api.get("/templates");
+
+          if (flowsData && flowsData.length > 0) {
+            setFlows(flowsData);
+            setLoadingFlows(false);
           }
-        }, 3000);
+
+          hasRun.current = true;
+
+          return null;
+        }
+        setLoadedStatus(true);
+
+        const { data: flowsData } = await api.get("/templates");
+
+        if (flowsData && flowsData.length > 0) {
+          setFlows(flowsData);
+          setLoadingFlows(false);
+        }
+
+        hasRun.current = true;
       }
     }
 
     load();
-  }, []);
+  }, [alreadyRun]);
 
   return (
     <>
@@ -137,35 +222,49 @@ export default function TemplatesList() {
               </span>
               <button
                 type="button"
+                onClick={logout}
                 className="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900"
               >
                 Desconectar
               </button>
             </div>
           )}
-          {!connected &&
-            (qrCode ? (
-              <div className="flex mt-10 flex-row items-center">
-                <div className="w-[180px] flex h-[180px]  rounded-md bg-gray-100">
-                  {qrCode && (
-                    <img src={qrCode} className=" rounded-md" alt="qr" />
-                  )}
-                </div>
-                <ul className="ml-5"></ul>
-              </div>
+          {loadedStatus &&
+            !connected &&
+            (canShowQr ? (
+              <>
+                {!connected &&
+                  (qrCode ? (
+                    <div className="flex mt-10 flex-row items-center">
+                      <div className="w-[180px] flex h-[180px]  rounded-md bg-gray-100">
+                        {qrCode && (
+                          <img src={qrCode} className=" rounded-md" alt="qr" />
+                        )}
+                      </div>
+                      <ul className="ml-5"></ul>
+                    </div>
+                  ) : (
+                    <Oval
+                      height={80}
+                      width={80}
+                      color="blue"
+                      wrapperStyle={{}}
+                      wrapperClass=""
+                      visible={true}
+                      ariaLabel="oval-loading"
+                      secondaryColor="blue"
+                      strokeWidth={2}
+                      strokeWidthSecondary={2}
+                    />
+                  ))}
+              </>
             ) : (
-              <Oval
-                height={80}
-                width={80}
-                color="blue"
-                wrapperStyle={{}}
-                wrapperClass=""
-                visible={true}
-                ariaLabel="oval-loading"
-                secondaryColor="blue"
-                strokeWidth={2}
-                strokeWidthSecondary={2}
-              />
+              <button
+                onClick={showQr}
+                className="text-white mt-4 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+              >
+                Conectar com Whatsapp
+              </button>
             ))}
         </div>
         <div className="header flex justify-between items-center">
@@ -177,15 +276,30 @@ export default function TemplatesList() {
             Criar novo
           </Link>
         </div>
-        <div className="flow-list flex flex-row justify-start align-middle text-left items-start">
-          {flows.map((flow: any) => (
-            <FlowItem
-              active={flow.active}
-              id={flow._id}
-              title={flow.name}
-              triggers={flow.trigger}
-            ></FlowItem>
-          ))}
+        <div className="flow-list block justify-start align-middle text-left items-start">
+          {loadingFlows ? (
+            <Oval
+              height={80}
+              width={80}
+              color="blue"
+              wrapperStyle={{}}
+              wrapperClass=""
+              visible={true}
+              ariaLabel="oval-loading"
+              secondaryColor="blue"
+              strokeWidth={2}
+              strokeWidthSecondary={2}
+            />
+          ) : (
+            flows.map((flow: any) => (
+              <FlowItem
+                active={flow.active}
+                id={flow._id}
+                title={flow.name}
+                triggers={flow.trigger}
+              ></FlowItem>
+            ))
+          )}
         </div>
       </div>
     </>
