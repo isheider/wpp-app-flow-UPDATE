@@ -15,16 +15,6 @@ const router = createBrowserRouter([
     path: "/",
     loader: async () => {
       throw redirect("/flows");
-      // const user = await fake.getUser();
-      // if (!user) {
-      //   // if you know you can't render the route, you can
-      //   // throw a redirect to stop executing code here,
-      //   // sending the user to a new route
-      // }
-
-      // // otherwise continue
-      // const stats = await fake.getDashboardStats();
-      // return { user, stats };
     },
   },
   {
