@@ -20,14 +20,14 @@ export default function ({
           {message}
         </p>
       </div>
-      {/* {handleDeleteNode && nodeId && (
+      {handleDeleteNode && nodeId && (
         <div
           onClick={() => handleDeleteNode(nodeId)}
-          className="cursor-pointer w-8 h-8 bg-gray-300"
+          className="absolute top-4 right-4 hover:bg-red-300 cursor-pointer rounded-full flex items-center justify-center w-8 h-8 bg-gray-300"
         >
           <FaTimes />
         </div>
-      )} */}
+      )}
     </div>
   );
 }

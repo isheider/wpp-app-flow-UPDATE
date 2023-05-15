@@ -12,6 +12,7 @@ import { Link } from "react-router-dom";
 import { FaPencilAlt, FaCheck } from "react-icons/fa";
 import { FiEdit2, FiSave } from "react-icons/fi";
 import { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
 
 const EditableText = ({ initialValue, onSave }: any) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -56,6 +57,8 @@ const NavBar: React.FC<INavBar> = ({
   editableInitialValue,
   back,
 }) => {
+  const { name, logout } = useAuth();
+
   return (
     <nav className="border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
       <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
@@ -115,13 +118,16 @@ leading-none font-semibold whitespace-nowrap dark:text-white"
               </a>
             </li>
 
-            <li>
-              <a
-                href="#"
-                className="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent"
+            <li className="inline-block">
+              <span className="text-gray-600 font-semibold">
+                {name?.split(" ")[0]},{" "}
+              </span>
+              <button
+                onClick={() => logout()}
+                className="inline-block font-bold py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent"
               >
                 Sair
-              </a>
+              </button>
             </li>
           </ul>
         </div>

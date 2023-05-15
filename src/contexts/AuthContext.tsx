@@ -1,72 +1,137 @@
-// src/AuthContext.js
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import axios from 'axios';
-import api from '../services/api';
+import React, { createContext, useContext, useEffect, useState } from "react";
 
-const AuthContext = createContext({});
+import api from "../services/api";
 
-const AuthProvider = ({ children }:any) => {
-  const [authenticated, setAuthenticated] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+import axios from "axios";
+
+interface SignInReturn {
+  token: string;
+  name: string;
+  id: string;
+}
+
+interface AuthContextData {
+  token: string | null;
+  name: string | null;
+  id: string | null;
+  role?: string | null;
+  checkSession?: boolean;
+  signIn(email: string, password: string): Promise<SignInReturn | false>;
+  logout(): Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextData>({} as AuthContextData);
+
+interface AuthProviderProps {
+  children?: any;
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [id, setId] = useState<string | null>("");
+  const [token, setToken] = useState<string | null>(null);
+  const [name, setName] = useState<string | null>("");
+  const [role, setRole] = useState<string | null>(null);
+  const [checkSession, setCheckSession] = useState<boolean>(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const userId = localStorage.getItem('userId');
+    async function load() {
+      const storagedToken = localStorage.getItem("@BOT-SIMPLES:token");
 
-    if (token && userId) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setAuthenticated(true);
-      setUserId(userId);
-    }
-    setLoading(false);
-  }, []);
+      if (storagedToken) {
+        api.defaults.headers["Authorization"] = `Bearer ${storagedToken}`;
 
-  const login = async (email:string, password:string) => {
-    try {
-      const response = await api.post('/api/login', { email, password });
-      const { userId, token } = response.data;
-      localStorage.setItem('userId', userId);
-      localStorage.setItem('token', token);
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setAuthenticated(true);
-      setUserId(userId);
-    } catch (error:any) {
-      if (error.response && error.response.status === 401) {
-        alert('Senha incorreta!');
+        setToken(storagedToken);
+
+        const { data: userDetails } = await api.get("/profile");
+
+        if (userDetails) {
+          setName(userDetails.name);
+          setId(userDetails._id);
+          localStorage.setItem("@BOT-SIMPLES:name", userDetails.name);
+
+          setRole(userDetails.role);
+          setCheckSession(true);
+        }
       } else {
-        alert('Erro ao efetuar login!');
+        setToken(null);
+
+        setCheckSession(true);
       }
     }
-  };
+    load();
+  }, []);
 
-  const logout = () => {
-    localStorage.removeItem('userId');
-    localStorage.removeItem('token');
-    delete api.defaults.headers.common['Authorization'];
-    setAuthenticated(false);
-    setUserId(null);
-  };
+  async function signIn(
+    email: string,
+    password: string
+  ): Promise<SignInReturn | false> {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/sessions`,
+        {
+          email: email,
+          password: password,
+        }
+      );
+
+      if (response.data.token) {
+        setToken(response.data.token);
+        setName(response.data.user.name);
+        setId(response.data.user._id);
+
+        api.defaults.headers["Authorization"] = `Bearer ${response.data.token}`;
+        setRole(response.data.user.role);
+        localStorage.setItem("@BOT-SIMPLES:role", response.data.user.role);
+
+        localStorage.setItem("@BOT-SIMPLES:user_id", response.data.user._id);
+        localStorage.setItem("@BOT-SIMPLES:token", response.data.token);
+        localStorage.setItem("@BOT-SIMPLES:name", response.data.user.name);
+        setCheckSession(true);
+
+        return response ? response.data : false;
+      } else {
+        return false;
+      }
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async function logout() {
+    setToken(null);
+    setRole(null);
+    setName(null);
+    setId(null);
+
+    api.defaults.headers["Authorization"] = ` `;
+
+    localStorage.removeItem("@BOT-SIMPLES:user_id");
+    localStorage.removeItem("@BOT-SIMPLES:token");
+    localStorage.removeItem("@BOT-SIMPLES:name");
+    localStorage.removeItem("@BOT-SIMPLES:role");
+
+    // window.location.href = "/login";
+  }
 
   return (
-    <AuthContext.Provider value={{ authenticated, userId, login, logout, loading }}>
+    <AuthContext.Provider
+      value={{
+        signIn,
+        role,
+        token,
+        logout,
+        name,
+        id,
+        checkSession,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
-const useAuth = () => {
-    const context = useContext(AuthContext);
-  
-    if (!context) {
-      throw new Error('useAuth deve ser usado dentro de um AuthProvider');
-    }
-  
-    return context;
-  };
-  
-export default AuthProvider
+export function useAuth() {
+  const context = useContext(AuthContext);
 
-export { useAuth };
-
-// export { AuthContext, AuthProvider };
+  return context;
+}

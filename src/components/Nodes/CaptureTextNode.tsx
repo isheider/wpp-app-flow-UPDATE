@@ -55,7 +55,7 @@ const MessageNodeComponent = memo(({ id }: any) => {
   );
 });
 
-const CaptureTextNode = memo(({ id }: any) => {
+const CaptureTextNode = memo(({ id, data: propsData }: any) => {
   const formRef = useRef<FormHandles>(null);
   const handleSubmit: SubmitHandler<FormData> = (data) => {
     console.log(formRef);
@@ -94,6 +94,8 @@ const CaptureTextNode = memo(({ id }: any) => {
         <NodeHeader
           title="Perguntar"
           color="bg-yellow-300"
+          nodeId={id}
+          handleDeleteNode={propsData.handleDeleteNode}
           message="Capture o texto que o usuário digitar no chat após a mensagem"
         />
         <Form ref={formRef} onSubmit={handleSubmit}>

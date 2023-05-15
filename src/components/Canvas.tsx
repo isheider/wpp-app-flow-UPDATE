@@ -26,6 +26,7 @@ import { Oval } from "react-loader-spinner";
 
 import { useParams, useNavigate } from "react-router-dom";
 
+import { useAuth } from "../contexts/AuthContext";
 import { NodeDataProvider, useNodeData } from "../contexts/NodeDataContext";
 
 import "reactflow/dist/style.css";
@@ -45,8 +46,8 @@ import StartNode from "./Nodes/StartNode";
 import CaptureTextNode from "./Nodes/CaptureTextNode";
 import { DefaultEdge } from "./DefaultEdge";
 import Aside from "./Aside";
-import axios from "axios";
 import api from "../services/api";
+import { toast } from "react-toastify";
 
 interface InitialNode extends Node {
   type: keyof typeof NODE_TYPES;
@@ -95,6 +96,8 @@ export function Canvas() {
 
   const { nodeData, setNodeData } = useNodeData();
 
+  const { id, checkSession } = useAuth();
+
   const reactFlowWrapper = useRef<any>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const onConnect = useCallback(
@@ -114,13 +117,16 @@ export function Canvas() {
 
         setEdges((eds) => {
           console.log(current);
-          const connecteds = getConnectedEdges(current, eds);
+          console.log(eds);
+          const connecteds = getConnectedEdges(current, eds).map((i) => i.id);
           console.log("connecteds", connecteds);
 
-          return eds;
+          const newEdges = eds.filter((edge) => !connecteds.includes(edge.id));
+
+          return newEdges;
         });
 
-        return nds;
+        return left;
       });
     },
     [nodes, edges]
@@ -177,7 +183,7 @@ export function Canvas() {
 
       setNodes((nds) => nds.concat(newNode));
     },
-    [reactFlowInstance]
+    [reactFlowInstance, handleDeleteNode]
   );
 
   const { templateId } = useParams();
@@ -198,29 +204,34 @@ export function Canvas() {
 
   useEffect(() => {
     async function load() {
-      if (templateId) {
-        if (templateId === "new") {
-          setLoadingFlow(false);
-          setCurrentFlowName("Fluxo sem título");
+      if (templateId && checkSession) {
+        if (!id) {
+          navigate("/login");
         } else {
-          setLoadingFlow(true);
-          const { data } = await axios.get(
-            `${
-              import.meta.env.VITE_API_URL ?? "http://localhost:3333"
-            }/templates/${templateId}`
-          );
+          if (templateId === "new") {
+            setLoadingFlow(false);
+            setCurrentFlowName("Fluxo sem título");
+          } else {
+            setLoadingFlow(true);
+            const { data } = await api.get(`templates/${templateId}`);
 
-          // 64268b4b76ea4d5e4f2b2e2c
+            // 64268b4b76ea4d5e4f2b2e2c
 
-          if (data) {
-            setNodeData(data.flowData.nodeData);
-            setNodes(data.flowData.nodes);
-            setEdges(data.flowData.edges);
-            setCurrentFlowName(data.name);
-            setCurrentActive(data.active);
+            if (data) {
+              setNodeData(data.flowData.nodeData);
+              setNodes(
+                data.flowData.nodes.map((i) => ({
+                  ...i,
+                  data: { ...i.data, handleDeleteNode },
+                }))
+              );
+              setEdges(data.flowData.edges);
+              setCurrentFlowName(data.name);
+              setCurrentActive(data.active);
+            }
+
+            setLoadingFlow(false);
           }
-
-          setLoadingFlow(false);
         }
       }
     }
@@ -593,165 +604,190 @@ export function Canvas() {
     //     id: "reactflow__edge-21680558423299-1680558728593top",
     //   },
     // ]);
-  }, [templateId]);
+  }, [templateId, checkSession, id]);
 
   const navigate = useNavigate();
 
   const handleSave = useCallback(async () => {
-    function transformObjectsToBlocks(flowData, nodeData) {
-      const { edges, nodes } = flowData;
-
-      const areConnecteds = getConnectedEdges(nodes, edges);
-      console.log("connects", areConnecteds);
-
-      const connectedIds = areConnecteds.map((i) => i.id);
-
-      console.log(edges.filter((i) => connectedIds.indexOf(i.id) === -1));
-
-      // Crie um mapa de conexões (sourceId: [targetId])
-      const connections = edges.reduce((acc, edge) => {
-        if (!acc[edge.source]) {
-          acc[edge.source] = [];
-        }
-        acc[edge.source].push({
-          target: edge.target,
-          sourceHandle: edge.sourceHandle,
-        });
-        return acc;
-      }, {});
-
-      const blocks = nodes.map((node) => {
-        const content = nodeData[node.id]?.content || "";
-        const selectedVariable = nodeData[node.id]?.selectedVariable;
-        const ways = nodeData[node.id]?.ways || [];
-
-        let block = {
-          key: node.id,
-          node_type: node.type,
-          content_data: {
-            message: content,
-          },
-          block_origin_key: [],
-          block_target_key: connections[node.id]
-            ? connections[node.id].map((conn) => conn.target)
-            : [],
-          ways: [],
-        };
-
-        if (selectedVariable) {
-          block["save_to_variable"] = selectedVariable.value;
-        }
-
-        if (node.type === "selector" || node.type === "startNode") {
-          block.content_data.variable =
-            nodeData[node.id]?.content_data?.variable ?? null;
-          block.use_ways = true;
-          block.ways = ways.map((way) => ({
-            key: way.id,
-            term: way.term,
-            condition: way.type,
-            block_target_key: connections[node.id].find(
-              (conn) => conn.sourceHandle === way.id
-            )?.target,
-          }));
-        }
-
-        if (node.type === "setVariableNode") {
-          block.content_data.variable = selectedVariable.value;
-          block.content_data.content = content;
-        }
-
-        return block;
-      });
-
-      // Atualizar block_origin_key
-      blocks.forEach((block) => {
-        if (block.node_type === "selector" || block.node_type === "startNode") {
-          block.ways.forEach((way) => {
-            const targetBlock = blocks.find(
-              (b) => b.key === way.block_target_key
-            );
-            if (targetBlock) {
-              targetBlock.block_origin_key.push(way.key);
-            }
-          });
-        } else {
-          block.block_target_key.forEach((targetId) => {
-            const targetBlock = blocks.find((b) => b.key === targetId);
-            if (targetBlock) {
-              targetBlock.block_origin_key.push(block.key);
-            }
-          });
-        }
-      });
-
-      const triggerBlock = blocks.filter((i) => i.key === "1")[0];
-
-      const trigger = triggerBlock.ways;
-
-      var final = {
-        name: "Flow",
-        user: "641428ac4c89cd28836b09fa",
-        trigger,
-        blocks: blocks
-          .filter((i) => i.key !== "1")
-          .map((i) => ({
-            ...i,
-            block_target_key: Array.isArray(i.block_target_key)
-              ? i.block_target_key[0]
-              : i.block_target_key,
-          })),
-      };
-
-      return final;
-    }
-
-    const data = {
-      ...transformObjectsToBlocks({ nodes, edges }, nodeData),
-      flowData: {
-        nodes,
-        edges,
-        nodeData,
-      },
-    };
-
-    if (templateId) {
-      if (templateId === "new") {
-        setLoadingSave(true);
-        const { data: responseData } = await api.post(`/templates`, {
-          ...data,
-          name: currentFlowName,
-          active: currentActive,
-        });
-
-        if (responseData && responseData._id) {
-          navigate(`/flows/${responseData._id}`);
-        }
-
-        setLoadingSave(false);
+    if (checkSession) {
+      if (!id) {
+        navigate("/login");
       } else {
-        setLoadingSave(true);
-        await api.put(`/templates/${templateId}`, {
-          ...data,
-          name: currentFlowName,
-          active: currentActive,
-        });
+        try {
+          function transformObjectsToBlocks(flowData, nodeData) {
+            const { edges, nodes } = flowData;
 
-        setLoadingSave(false);
+            const areConnecteds = getConnectedEdges(nodes, edges);
+            console.log("connects", areConnecteds);
+
+            const connectedIds = areConnecteds.map((i) => i.id);
+
+            console.log(edges.filter((i) => connectedIds.indexOf(i.id) === -1));
+
+            // Crie um mapa de conexões (sourceId: [targetId])
+            const connections = edges.reduce((acc, edge) => {
+              if (!acc[edge.source]) {
+                acc[edge.source] = [];
+              }
+              acc[edge.source].push({
+                target: edge.target,
+                sourceHandle: edge.sourceHandle,
+              });
+              return acc;
+            }, {});
+
+            const blocks = nodes.map((node) => {
+              const content = nodeData[node.id]?.content || "";
+              const selectedVariable = nodeData[node.id]?.selectedVariable;
+              const ways = nodeData[node.id]?.ways || [];
+
+              let block = {
+                key: node.id,
+                node_type: node.type,
+                content_data: {
+                  message: content,
+                },
+                block_origin_key: [],
+                block_target_key: connections[node.id]
+                  ? connections[node.id].map((conn) => conn.target)
+                  : [],
+                ways: [],
+              };
+
+              if (selectedVariable) {
+                block["save_to_variable"] = selectedVariable.value;
+              }
+
+              if (node.type === "selector" || node.type === "startNode") {
+                block.content_data.variable =
+                  nodeData[node.id]?.content_data?.variable ?? null;
+                block.use_ways = true;
+                block.ways = ways.map((way) => ({
+                  key: way.id,
+                  term: way.term,
+                  condition: way.type,
+                  block_target_key: connections[node.id].find(
+                    (conn) => conn.sourceHandle === way.id
+                  )?.target,
+                }));
+              }
+
+              if (node.type === "setVariableNode") {
+                block.content_data.variable = selectedVariable.value;
+                block.content_data.content = content;
+              }
+
+              return block;
+            });
+
+            // Atualizar block_origin_key
+            blocks.forEach((block) => {
+              if (
+                block.node_type === "selector" ||
+                block.node_type === "startNode"
+              ) {
+                block.ways.forEach((way) => {
+                  const targetBlock = blocks.find(
+                    (b) => b.key === way.block_target_key
+                  );
+                  if (targetBlock) {
+                    targetBlock.block_origin_key.push(way.key);
+                  }
+                });
+              } else {
+                block.block_target_key.forEach((targetId) => {
+                  const targetBlock = blocks.find((b) => b.key === targetId);
+                  if (targetBlock) {
+                    targetBlock.block_origin_key.push(block.key);
+                  }
+                });
+              }
+            });
+
+            const triggerBlock = blocks.filter((i) => i.key === "1")[0];
+
+            const trigger = triggerBlock.ways;
+
+            var final = {
+              name: "Flow",
+              user: id,
+              trigger,
+              blocks: blocks
+                .filter((i) => i.key !== "1")
+                .map((i) => ({
+                  ...i,
+                  block_target_key: Array.isArray(i.block_target_key)
+                    ? i.block_target_key[0]
+                    : i.block_target_key,
+                })),
+            };
+
+            return final;
+          }
+
+          const data = {
+            ...transformObjectsToBlocks({ nodes, edges }, nodeData),
+            flowData: {
+              nodes,
+              edges,
+              nodeData,
+            },
+          };
+
+          if (templateId) {
+            if (templateId === "new") {
+              setLoadingSave(true);
+              const { data: responseData } = await api.post(`/templates`, {
+                ...data,
+                name: currentFlowName,
+                active: currentActive,
+              });
+
+              if (responseData && responseData._id) {
+                toast.success("Flow criado com sucesso!");
+                navigate(`/flows/${responseData._id}`);
+              }
+
+              setLoadingSave(false);
+            } else {
+              setLoadingSave(true);
+              await api.put(`/templates/${templateId}`, {
+                ...data,
+                name: currentFlowName,
+                active: currentActive,
+              });
+
+              toast.success("Flow editado com sucesso!");
+
+              setLoadingSave(false);
+            }
+          }
+          console.log({ nodes, edges });
+          console.log(nodeData);
+          console.log(data);
+          // nodeData
+
+          // console.log({
+          //   nodes,
+          //   edges,
+          //   reactFlowInstance,
+          //   reactFlowWrapper
+          // })
+        } catch (err) {
+          toast.error("Verifique o fluxo antes de continuar");
+        }
       }
     }
-    console.log({ nodes, edges });
-    console.log(nodeData);
-    console.log(data);
-    // nodeData
-
-    // console.log({
-    //   nodes,
-    //   edges,
-    //   reactFlowInstance,
-    //   reactFlowWrapper
-    // })
-  }, [nodes, edges, nodeData, templateId, currentActive, currentFlowName]);
+  }, [
+    nodes,
+    edges,
+    id,
+    checkSession,
+    nodeData,
+    templateId,
+    currentActive,
+    currentFlowName,
+  ]);
 
   useEffect(() => {
     console.log({

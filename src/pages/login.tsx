@@ -2,26 +2,44 @@ import { useState } from "react";
 import api from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { Oval } from "react-loader-spinner";
+import { toast } from "react-toastify";
 
 export default function Login() {
-  const { login }: any = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  const [loading, setLoading] = useState(false);
+
   const handleSubmit = async (e: any) => {
     e.preventDefault();
+    if (!loading) {
+      setLoading(true);
 
-    if (!email || !password) {
-      return null;
+      if (!email || !password) {
+        setLoading(false);
+        return null;
+      }
+
+      const response = await signIn(email, password);
+
+      if (response && response.token) {
+        toast.success("Logado com sucesso! Redirecionando...");
+        setTimeout(() => {
+          window.location.href = "/flows";
+        }, 300);
+      } else {
+        toast.error(
+          "Verifique novamente seus dados de acesso e tente novamente!"
+        );
+        setLoading(false);
+      }
+
+      console.log(response);
     }
-
-    console.log(email, password);
-
-    // await login(email, password);
-
-    navigate("/flows");
   };
 
   return (
@@ -77,9 +95,23 @@ export default function Login() {
 
                 <button
                   type="submit"
-                  className="w-full text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                  className="w-full flex justify-center text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
                 >
-                  Entrar
+                  {loading ? (
+                    <Oval
+                      height={20}
+                      width={20}
+                      color="white"
+                      wrapperStyle={{}}
+                      wrapperClass="mx-auto text-center text-white"
+                      visible={true}
+                      ariaLabel="oval-loading"
+                      strokeWidth={2}
+                      strokeWidthSecondary={2}
+                    />
+                  ) : (
+                    "Entrar"
+                  )}
                 </button>
                 <p className="text-sm hidden font-light text-gray-500 dark:text-gray-400">
                   Don’t have an account yet?{" "}

@@ -201,6 +201,8 @@ const MediaNode = memo((props: any) => {
         <NodeHeader
           title="Enviar mídia"
           color="bg-blue-500"
+          nodeId={props.id}
+          handleDeleteNode={props.data.handleDeleteNode}
           message="Envie uma mídia (imagem, vídeo, áudio ou arquivo) para o usuário"
         />
         <Form ref={formRef} onSubmit={handleSubmit}>

@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 import NavBar from "../components/NavBar";
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { Oval } from "react-loader-spinner";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function TemplatesList() {
   const [loadingFlows, setLoadingFlows] = useState(true);
@@ -103,45 +104,76 @@ export default function TemplatesList() {
   const [connected, setConnected] = useState(false);
   const [canShowQr, setCanShowQr] = useState(false);
 
+  const { id, checkSession } = useAuth();
+
   async function showQr() {
     setCanShowQr(true);
-    const response = await api.get(
-      "/users/641428ac4c89cd28836b09fa/wpp-connect"
-    );
-    // if (!response.data.connected) {
-    setTimeout(async () => {
-      const response2 = await api.get(
-        "/users/641428ac4c89cd28836b09fa/qr-code"
-      );
-      if (response2.data.qrcode) {
-        setQrCode(response2.data.qrcode);
-      } else {
-        setTimeout(async () => {
-          const response3 = await api.get(
-            "/users/641428ac4c89cd28836b09fa/qr-code"
-          );
-          if (response3.data.qrcode) {
-            setQrCode(response3.data.qrcode);
-          } else {
-            setTimeout(async () => {
-              const response3 = await api.get(
-                "/users/641428ac4c89cd28836b09fa/qr-code"
-              );
-              if (response3.data.qrcode) {
-                setQrCode(response3.data.qrcode);
-              }
-            }, 3000);
-          }
-        }, 3000);
-      }
-    }, 3000);
-    // }
+
+    const response = await api.get(`/users/${id}/qr-code`);
+
+    if (response.data.error) {
+      setCanShowQr(false);
+    } else {
+      setQrCode(response.data.qr);
+      setTimeout(async () => {
+        setQrCode(null);
+        setCanShowQr(false);
+        const responseStatus = await api.get(`/users/${id}/wpp-status`);
+
+        console.log(responseStatus);
+
+        if (
+          !responseStatus.data.error &&
+          responseStatus.data.state === "open" &&
+          responseStatus.data.instance
+        ) {
+          setQrCode(null);
+          setInstance(responseStatus.data.instance);
+          setConnected(true);
+          setLoadedStatus(true);
+        }
+        setLoadedStatus(true);
+      }, 10000);
+    }
   }
 
+  // async function showQr() {
+  //   setCanShowQr(true);
+  //   const response = await api.get(
+  //     "/users/641428ac4c89cd28836b09fa/wpp-connect"
+  //   );
+  //   // if (!response.data.connected) {
+  //   setTimeout(async () => {
+  //     const response2 = await api.get(
+  //       "/users/641428ac4c89cd28836b09fa/qr-code"
+  //     );
+  //     if (response2.data.qrcode) {
+  //       setQrCode(response2.data.qrcode);
+  //     } else {
+  //       setTimeout(async () => {
+  //         const response3 = await api.get(
+  //           "/users/641428ac4c89cd28836b09fa/qr-code"
+  //         );
+  //         if (response3.data.qrcode) {
+  //           setQrCode(response3.data.qrcode);
+  //         } else {
+  //           setTimeout(async () => {
+  //             const response3 = await api.get(
+  //               "/users/641428ac4c89cd28836b09fa/qr-code"
+  //             );
+  //             if (response3.data.qrcode) {
+  //               setQrCode(response3.data.qrcode);
+  //             }
+  //           }, 3000);
+  //         }
+  //       }, 3000);
+  //     }
+  //   }, 3000);
+  //   // }
+  // }
+
   async function logout() {
-    const response = await api.delete(
-      "/users/641428ac4c89cd28836b09fa/wpp-logout"
-    );
+    const response = await api.delete(`/users/${id}/wpp-logout`);
     setConnected(false);
     setCanShowQr(false);
   }
@@ -154,48 +186,92 @@ export default function TemplatesList() {
   const [alreadyRun, setAlreadyRun] = useState(false);
   const hasRun = useRef(false);
 
+  const navigate = useNavigate();
+  // setLoadingFlows(true);
+  // const { data: flowsData } = await api.get("/templates");
+
+  //         if (flowsData && flowsData.length > 0) {
+  //           setFlows(flowsData);
+  //           setLoadingFlows(false);
+  //         }
+
   useEffect(() => {
     async function load() {
-      if (!hasRun.current) {
-        setQrCode(null);
+      setQrCode(null);
 
-        const response1 = await api.get(
-          "/users/641428ac4c89cd28836b09fa/wpp-status"
-        );
+      if (checkSession) {
+        if (!id) {
+          navigate("/login");
+        } else {
+          const responseStatus = await api.get(`/users/${id}/wpp-status`);
 
-        if (response1.data.connected) {
-          setQrCode(null);
-          setInstance(response1.data.instance);
-          setConnected(true);
-          setLoadedStatus(true);
+          console.log(responseStatus);
 
-          setLoadingFlows(true);
           const { data: flowsData } = await api.get("/templates");
 
-          if (flowsData && flowsData.length > 0) {
+          if (flowsData) {
             setFlows(flowsData);
             setLoadingFlows(false);
           }
 
+          if (
+            !responseStatus.data.error &&
+            responseStatus.data.state === "open" &&
+            responseStatus.data.instance
+          ) {
+            setQrCode(null);
+            setInstance(responseStatus.data.instance);
+            setConnected(true);
+            setLoadedStatus(true);
+
+            hasRun.current = true;
+
+            return null;
+          }
+
+          setLoadedStatus(true);
+
           hasRun.current = true;
-
-          return null;
         }
-        setLoadedStatus(true);
-
-        const { data: flowsData } = await api.get("/templates");
-
-        if (flowsData && flowsData.length > 0) {
-          setFlows(flowsData);
-          setLoadingFlows(false);
-        }
-
-        hasRun.current = true;
       }
     }
-
     load();
-  }, [alreadyRun]);
+  }, [id, checkSession]);
+
+  // useEffect(() => {
+  //   async function load() {
+  //     if (!hasRun.current) {
+  //       setQrCode(null);
+
+  //       const response1 = await api.get(
+  //         "/users/641428ac4c89cd28836b09fa/wpp-status"
+  //       );
+
+  //       if (response1.data.connected) {
+  //         setQrCode(null);
+  //         setInstance(response1.data.instance);
+  //         setConnected(true);
+  //         setLoadedStatus(true);
+
+  //         const { data: flowsData } = await api.get("/templates");
+
+  //         if (flowsData && flowsData.length > 0) {
+  //           setFlows(flowsData);
+  //           setLoadingFlows(false);
+  //         }
+
+  //         hasRun.current = true;
+
+  //         return null;
+  //       }
+  //       setLoadedStatus(true);
+
+  //       hasRun.current = true;
+  //     }
+  //   }
+
+  //   load();
+  // }, [alreadyRun]);
 
   return (
     <>
@@ -218,7 +294,7 @@ export default function TemplatesList() {
           {connected && instance && (
             <div className="flex items-center flex-row">
               <span className="text-2xl mt-3 mr-2 mb-10 font-semibold">
-                {instance.user.id.split(":")[0]}
+                {instance.owner.split("@")[0]}
               </span>
               <button
                 type="button"
@@ -290,6 +366,8 @@ export default function TemplatesList() {
               strokeWidth={2}
               strokeWidthSecondary={2}
             />
+          ) : flows.length === 0 ? (
+            "Clique em 'Criar novo' para criar um novo fluxo."
           ) : (
             flows.map((flow: any) => (
               <FlowItem

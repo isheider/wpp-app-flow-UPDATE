@@ -234,6 +234,8 @@ Custom Color Picker Node: <strong>{data.color}</strong>
       <NodeHeader
         title="Comparar"
         color="bg-blue-500"
+        nodeId={id}
+        handleDeleteNode={data.handleDeleteNode}
         message="Faça caminhos no fluxo de acordo com o texto presente na variável"
       />
       <h3 className="flex justify-between items-center mt-[-5px] mb-2 text-base font-medium text-gray-900 dark:text-white">
