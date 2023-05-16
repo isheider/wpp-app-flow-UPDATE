@@ -9,6 +9,8 @@ interface INavBar {
 import { FaArrowLeft } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
+import logo from "../assets/logo-circle.png";
+
 import { FaPencilAlt, FaCheck } from "react-icons/fa";
 import { FiEdit2, FiSave } from "react-icons/fi";
 import { useState } from "react";
@@ -63,6 +65,7 @@ const NavBar: React.FC<INavBar> = ({
     <nav className="border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
       <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
         <div className="flex items-center">
+          <img src={logo} className="h-[30px] mr-6" />
           {back && (
             <Link to={back}>
               <FaArrowLeft className="mr-4" size={22} />
