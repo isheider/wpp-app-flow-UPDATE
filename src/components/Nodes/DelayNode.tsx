@@ -52,6 +52,8 @@ const DelayNode = memo((props: any) => {
       <NodeHeader
         title="Aguardar"
         color="bg-blue-500"
+        nodeId={props.id}
+        handleDeleteNode={props.data.handleDeleteNode}
         message="Defina um tempo de espera antes de prosseguir para o próximo nó"
       />
       <label
