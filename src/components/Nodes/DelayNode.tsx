@@ -56,6 +56,7 @@ const DelayNode = memo((props: any) => {
         handleDeleteNode={props.data.handleDeleteNode}
         message="Defina um tempo de espera antes de prosseguir para o próximo nó"
       />
+
       <label
         htmlFor={"term"}
         className="block mb-2 text-base font-medium text-gray-900 dark:text-white"
