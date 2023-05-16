@@ -36,7 +36,7 @@ export default function TemplatesList() {
           </h3>
           <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">
             {triggers.map((trigger: any) => (
-              <span className="bg-blue-100 inline-block text-blue-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">
+              <span className="bg-green-100 inline-block text-green-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">
                 {trigger.term}
               </span>
             ))}
@@ -46,7 +46,7 @@ export default function TemplatesList() {
         <div className="flex flex-row items-center">
           <Link
             to={`/flows/${id}`}
-            className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+            className="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-green-700 rounded-lg hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
           >
             Editar
             <svg
@@ -68,12 +68,12 @@ export default function TemplatesList() {
             <Oval
               height={20}
               width={20}
-              color="blue"
+              color="green"
               wrapperStyle={{}}
               wrapperClass="ml-4"
               visible={true}
               ariaLabel="oval-loading"
-              secondaryColor="blue"
+              secondaryColor="green"
               strokeWidth={2}
               strokeWidthSecondary={2}
             />
@@ -88,7 +88,7 @@ export default function TemplatesList() {
                 checked={currentActive}
                 onChange={(e) => handleActive(e.target.checked)}
               />
-              <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+              <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"></div>
               <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
                 {currentActive ? "Ativo" : "Inativo"}
               </span>
@@ -323,12 +323,12 @@ export default function TemplatesList() {
                     <Oval
                       height={80}
                       width={80}
-                      color="blue"
+                      color="green"
                       wrapperStyle={{}}
                       wrapperClass=""
                       visible={true}
                       ariaLabel="oval-loading"
-                      secondaryColor="blue"
+                      secondaryColor="green"
                       strokeWidth={2}
                       strokeWidthSecondary={2}
                     />
@@ -337,7 +337,7 @@ export default function TemplatesList() {
             ) : (
               <button
                 onClick={showQr}
-                className="text-white mt-4 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                className="text-white mt-4 bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none dark:focus:ring-green-800"
               >
                 Conectar com Whatsapp
               </button>
@@ -347,7 +347,7 @@ export default function TemplatesList() {
           <h1 className="text-5xl mb-10 font-bold">Fluxos</h1>
           <Link
             to="/flows/new"
-            className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+            className="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none dark:focus:ring-green-800"
           >
             Criar novo
           </Link>
@@ -357,12 +357,12 @@ export default function TemplatesList() {
             <Oval
               height={80}
               width={80}
-              color="blue"
+              color="green"
               wrapperStyle={{}}
               wrapperClass=""
               visible={true}
               ariaLabel="oval-loading"
-              secondaryColor="blue"
+              secondaryColor="green"
               strokeWidth={2}
               strokeWidthSecondary={2}
             />

@@ -3,7 +3,7 @@
 import { useCallback, useRef, useEffect, useState } from "react";
 import * as Toolbar from "@radix-ui/react-toolbar";
 import { Square as SquareIcon } from "phosphor-react";
-import { zinc, sky, blue } from "tailwindcss/colors";
+import { zinc, sky, green } from "tailwindcss/colors";
 import * as ContextMenu from "@radix-ui/react-context-menu";
 import ReactFlow, {
   Controls,
@@ -843,7 +843,7 @@ export function Canvas() {
                 padding: 50,
               }}
               connectionLineStyle={{
-                stroke: blue["400"],
+                stroke: green["400"],
                 strokeWidth: 3,
                 strokeDashoffset: 5,
                 strokeDasharray: 5,
@@ -868,12 +868,12 @@ export function Canvas() {
               <Oval
                 height={40}
                 width={40}
-                color="blue"
+                color="green"
                 wrapperStyle={{}}
                 wrapperClass="absolute right-10 top-10"
                 visible={true}
                 ariaLabel="oval-loading"
-                secondaryColor="blue"
+                secondaryColor="green"
                 strokeWidth={2}
                 strokeWidthSecondary={2}
               />
@@ -887,13 +887,13 @@ export function Canvas() {
                     checked={currentActive}
                     onChange={(e) => handleChangeActive(e.target.checked)}
                   />
-                  <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                  <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"></div>
                   <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
                     {currentActive ? "Ativo" : "Inativo"}
                   </span>
                 </label>
                 <button
-                  className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+                  className="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none dark:focus:ring-green-800"
                   onClick={handleSave}
                 >
                   Salvar

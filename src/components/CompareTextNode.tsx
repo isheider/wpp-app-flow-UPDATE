@@ -245,8 +245,10 @@ Custom Color Picker Node: <strong>{data.color}</strong>
 
       <CreatableSelect
         isClearable
-        noOptionsMessage={() => "Digite um nome de variável para criá-la"}
-        formatCreateLabel={(v) => `Criar "${v}"`}
+        noOptionsMessage={() =>
+          "Digite um nome de variável para criá-la ou selecioná-la"
+        }
+        formatCreateLabel={(v) => `Criar/selecionar "${v}"`}
         placeholder="Escolha ou crie uma variável"
         className="text-base nodrag focus:outline-0 outline-0"
         value={selectedVariable}
@@ -287,16 +289,7 @@ Custom Color Picker Node: <strong>{data.color}</strong>
             fontWeight: 600,
           }),
         }}
-        options={[
-          {
-            label: "Nome",
-            value: "nome",
-          },
-          {
-            label: "Email",
-            value: "email",
-          },
-        ]}
+        options={[]}
       />
       <div className="nodrag mt-2 text-[14px] text-gray-600">
         Selecione uma variável que será comparada

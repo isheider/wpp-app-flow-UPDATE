@@ -107,8 +107,10 @@ const SetVariableNode = memo(({ id, data: propsData }: any) => {
           </h3>
           <CreatableSelect
             isClearable
-            noOptionsMessage={() => "Digite um nome de variável para criá-la"}
-            formatCreateLabel={(v) => `Criar "${v}"`}
+            noOptionsMessage={() =>
+              "Digite um nome de variável para criá-la ou selecioná-la"
+            }
+            formatCreateLabel={(v) => `Criar/selecionar "${v}"`}
             placeholder="Escolha ou crie uma variável"
             value={selectedVariable}
             className="text-base nodrag focus:outline-0 outline-0"
@@ -149,16 +151,7 @@ const SetVariableNode = memo(({ id, data: propsData }: any) => {
                 fontWeight: 600,
               }),
             }}
-            options={[
-              {
-                label: "Nome",
-                value: "nome",
-              },
-              {
-                label: "Email",
-                value: "email",
-              },
-            ]}
+            options={[]}
           />
           <label
             htmlFor={"value"}
