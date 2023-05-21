@@ -706,7 +706,14 @@ export function Canvas() {
 
             const triggerBlock = blocks.filter((i) => i.key === "1")[0];
 
-            const trigger = triggerBlock.ways;
+            const removeAccents = (text: string) => {
+              return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            };
+
+            const trigger = triggerBlock.ways.map((m: any) => ({
+              ...m,
+              term: removeAccents(m.term),
+            }));
 
             var final = {
               name: "Flow",
