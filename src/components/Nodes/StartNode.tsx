@@ -130,7 +130,7 @@ const ColorSelectorNode = memo(({ id, data, isConnectable, ...rest }: any) => {
   const { nodeData, setNodeData }: any = useNodeData();
 
   // Obtenha ways e selectedVariable do nodeData
-  const ways = nodeData[id]?.ways || [];
+  const ways = nodeData ? nodeData[id]?.ways || [] : [];
   // const selectedVariable = nodeData[id]?.selectedVariable || null;
 
   // Use `useEffect` para sincronizar as mudanças no `nodeData` e atualizar o componente de acordo.
@@ -138,6 +138,7 @@ const ColorSelectorNode = memo(({ id, data, isConnectable, ...rest }: any) => {
     // Atualize o componente com base nas mudanças em nodeData
   }, [nodeData]);
   const handleChange = (wayId: any, field: any, value: any) => {
+    console.log(ways);
     if (ways.length === 0) {
       return false;
     }

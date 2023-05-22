@@ -209,6 +209,7 @@ export function Canvas() {
           navigate("/login");
         } else {
           if (templateId === "new") {
+            setNodeData({});
             setLoadingFlow(false);
             setCurrentFlowName("Fluxo sem título");
           } else {
@@ -218,7 +219,7 @@ export function Canvas() {
             // 64268b4b76ea4d5e4f2b2e2c
 
             if (data) {
-              setNodeData(data.flowData.nodeData);
+              setNodeData(data.flowData.nodeData ?? {});
               setNodes(
                 data.flowData.nodes.map((i) => ({
                   ...i,
@@ -796,6 +797,109 @@ export function Canvas() {
     currentFlowName,
   ]);
 
+  const [showImportConfirmationModal, setShowImportConfirmationModal] =
+    useState(false);
+
+  const fileInput = useRef(null);
+
+  const handleExport = useCallback(async () => {
+    const dataToExport = {
+      nodes,
+      edges,
+      nodeData,
+    };
+
+    const exportName = `exported-${Date.now()}`;
+
+    const dataStr =
+      "data:text/json;charset=utf-8," +
+      encodeURIComponent(JSON.stringify({ data: dataToExport }));
+    const downloadAnchorNode = document.createElement("a");
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", exportName + ".json");
+    document.body.appendChild(downloadAnchorNode); // required for firefox
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+  }, [
+    nodes,
+    edges,
+    id,
+    checkSession,
+    nodeData,
+    templateId,
+    currentActive,
+    currentFlowName,
+  ]);
+
+  const handleImportFileExplorer = useCallback(() => {
+    if (fileInput && fileInput.current) {
+      fileInput.current.click();
+    }
+  }, [fileInput]);
+
+  const handleImport = useCallback(
+    (event: any) => {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+
+      reader.onload = (event) => {
+        try {
+          const obj = JSON.parse(event.target.result);
+
+          console.log("go");
+          if (
+            obj &&
+            obj.data &&
+            obj.data.nodes &&
+            obj.data.edges &&
+            obj.data.nodeData
+          ) {
+            setNodes(obj.data.nodes);
+            setEdges(obj.data.edges);
+            setNodeData(obj.data.nodeData);
+
+            toast.success("Fluxo importado e reescrito com sucesso.");
+          } else {
+            console.log("fall");
+            toast.error(
+              "Ocorreu um erro ao tentar importar o fluxo, confira o arquivo e tente novamente."
+            );
+          }
+
+          setShowImportConfirmationModal(false);
+        } catch (err) {
+          console.log("fallll");
+          setShowImportConfirmationModal(false);
+          toast.error(
+            "Ocorreu um erro ao tentar importar o fluxo, confira o arquivo e tente novamente."
+          );
+        }
+      };
+      try {
+        reader.readAsText(file);
+      } catch (err) {
+        console.log("fallll");
+        setShowImportConfirmationModal(false);
+        toast.error(
+          "Ocorreu um erro ao tentar importar o fluxo, confira o arquivo e tente novamente."
+        );
+      }
+    },
+    [
+      nodes,
+      edges,
+      id,
+      checkSession,
+      nodeData,
+      templateId,
+      currentActive,
+      currentFlowName,
+      setNodes,
+      setEdges,
+      setNodeData,
+    ]
+  );
+
   useEffect(() => {
     console.log({
       nodes,
@@ -816,6 +920,73 @@ export function Canvas() {
 
   return (
     <>
+      <div
+        className={`${
+          showImportConfirmationModal ? "" : "hidden"
+        } fixed flex bg-gray-500/50 items-center justify-center top-0 left-0 right-0 z-50 p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%)] max-h-full`}
+      >
+        <div className="relative w-full max-w-md max-h-full">
+          <div className="relative bg-white rounded-lg shadow dark:bg-gray-700">
+            <button
+              type="button"
+              className="absolute top-3 right-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center dark:hover:bg-gray-800 dark:hover:text-white"
+              // data-modal-hide="popup-modal"
+              onClick={() => setShowImportConfirmationModal(false)}
+            >
+              <svg
+                aria-hidden="true"
+                className="w-5 h-5"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+              <span className="sr-only">Close modal</span>
+            </button>
+            <div className="p-6 text-center">
+              <svg
+                aria-hidden="true"
+                className="mx-auto mb-4 text-gray-400 w-14 h-14 dark:text-gray-200"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                ></path>
+              </svg>
+              <h3 className="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
+                Tem certeza que deseja sobrescrever o fluxo com uma importação?
+              </h3>
+              <button
+                onClick={handleImportFileExplorer}
+                // data-modal-hide="popup-modal"
+                type="button"
+                className="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center mr-2"
+              >
+                Sim, tenho
+              </button>
+              <button
+                // data-modal-hide="popup-modal"
+                onClick={() => setShowImportConfirmationModal(false)}
+                type="button"
+                className="text-gray-500 bg-white hover:bg-gray-100 focus:ring-4 focus:outline-none focus:ring-gray-200 rounded-lg border border-gray-200 text-sm font-medium px-5 py-2.5 hover:text-gray-900 focus:z-10 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-500 dark:hover:text-white dark:hover:bg-gray-600 dark:focus:ring-gray-600"
+              >
+                Não, cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
       <NavBar
         back="/flows"
         title={!currentFlowName ? "" : null}
@@ -885,27 +1056,52 @@ export function Canvas() {
                 strokeWidthSecondary={2}
               />
             ) : (
-              <div className="flex items-center absolute right-10 top-10">
-                <label className="relative mr-4 inline-flex items-center cursor-pointer">
+              <>
+                <div className="flex items-center absolute right-10 top-10">
+                  <button
+                    // data-modal-target="popup-modal"
+                    // data-modal-toggle="popup-modal"
+                    onClick={() => setShowImportConfirmationModal(true)}
+                    className="text-white mr-4 bg-zinc-700 hover:bg-zinc-800 focus:ring-4 focus:ring-zinc-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-zinc-600 dark:hover:bg-zinc-700 focus:outline-none dark:focus:ring-zinc-800"
+                    type="button"
+                  >
+                    Importar
+                  </button>
+
+                  <button
+                    className="text-white mr-4 bg-zinc-700 hover:bg-zinc-800 focus:ring-4 focus:ring-zinc-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-zinc-600 dark:hover:bg-zinc-700 focus:outline-none dark:focus:ring-zinc-800"
+                    onClick={handleExport}
+                  >
+                    Exportar
+                  </button>
+                  <label className="relative mr-4 inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      value=""
+                      className="sr-only peer"
+                      checked={currentActive}
+                      onChange={(e) => handleChangeActive(e.target.checked)}
+                    />
+                    <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"></div>
+                    <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
+                      {currentActive ? "Ativo" : "Inativo"}
+                    </span>
+                  </label>
                   <input
-                    type="checkbox"
-                    value=""
-                    className="sr-only peer"
-                    checked={currentActive}
-                    onChange={(e) => handleChangeActive(e.target.checked)}
+                    type="file"
+                    className="hidden"
+                    ref={fileInput}
+                    onChange={handleImport}
                   />
-                  <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-green-600"></div>
-                  <span className="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">
-                    {currentActive ? "Ativo" : "Inativo"}
-                  </span>
-                </label>
-                <button
-                  className="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none dark:focus:ring-green-800"
-                  onClick={handleSave}
-                >
-                  Salvar
-                </button>
-              </div>
+
+                  <button
+                    className="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-green-600 dark:hover:bg-green-700 focus:outline-none dark:focus:ring-green-800"
+                    onClick={handleSave}
+                  >
+                    Salvar
+                  </button>
+                </div>
+              </>
             )}
 
             {!loadingFlow && <Aside />}
