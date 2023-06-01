@@ -48,6 +48,7 @@ import { DefaultEdge } from "./DefaultEdge";
 import Aside from "./Aside";
 import api from "../services/api";
 import { toast } from "react-toastify";
+import { Tooltip } from "react-tooltip";
 
 interface InitialNode extends Node {
   type: keyof typeof NODE_TYPES;
@@ -94,7 +95,7 @@ export function Canvas() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  const { nodeData, setNodeData } = useNodeData();
+  const { nodeData, setNodeData, showEdgeDeleteLabel } = useNodeData();
 
   const { id, checkSession } = useAuth();
 
@@ -105,6 +106,16 @@ export function Canvas() {
       return setEdges((eds) => addEdge(params, eds));
     },
     [setEdges]
+  );
+
+  const handleDeleteEdge = useCallback(
+    (id: any) => {
+      setEdges((edges) => {
+        const left = edges.filter((edge) => edge.id !== id);
+        return left;
+      });
+    },
+    [nodes, edges]
   );
 
   const handleDeleteNode = useCallback(
@@ -1031,6 +1042,9 @@ export function Canvas() {
                 style: {
                   strokeWidth: 3,
                 },
+                data: {
+                  handleDeleteEdge,
+                },
                 markerEnd: {
                   type: MarkerType.ArrowClosed,
                   width: 20,
@@ -1042,6 +1056,21 @@ export function Canvas() {
               <Controls />
               <Background gap={12} size={2} color={zinc["200"]} />
             </ReactFlow>
+
+            {showEdgeDeleteLabel && (
+              <div className="w-full  flex justify-center mx-auto absolute bottom-20 text-center z-50">
+                <span className="bg-zinc-800/90 rounded-md py-4 px-10 text-white font-bold">
+                  Apagar conexão entre Widgets
+                </span>
+              </div>
+            )}
+            {/* <Tooltip
+              anchorSelect=".my-anchor-element"
+              place="bottom"
+              type="dark"
+              effect="float"
+            /> */}
+
             {loadingSave ? (
               <Oval
                 height={40}

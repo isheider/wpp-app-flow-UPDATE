@@ -1,3 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.edge-flow-selector:hover { cursor: pointer }
+.edge-flow-selector:hover + .edge-flow, .edge-flow:hover  {
+    stroke: rgb(248, 37, 30) !important;
+    cursor: pointer;
+}
+.edge-flow-selector {
+    fill: none;
+    stroke: transparent;
+    /* stroke-width: 28; */
+}

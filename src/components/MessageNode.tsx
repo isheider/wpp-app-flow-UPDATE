@@ -6,47 +6,44 @@ import { Handle, Position } from "reactflow";
 import NodeHeader from "./Nodes/NodeHeader";
 import { useNodeData } from "../contexts/NodeDataContext";
 
+import { HighlightWithinTextarea } from "react-highlight-within-textarea";
+
 const MessageNodeComponent = memo(({ id }: any) => {
   const { nodeData, setNodeData }: any = useNodeData();
-  const [isFocused, setIsFocused] = useState(false);
 
-  const handleChange = (event: any) => {
+  const handleChange = (text: any) => {
     const newData = {
       ...nodeData,
-      [id]: { ...nodeData[id], content: event.target.textContent },
+      [id]: { ...nodeData[id], content: text },
     };
     setNodeData(newData);
   };
 
-  const text = nodeData[id]?.content || "Seu texto aqui";
-
-  const stylizeVariables = (text: string) => {
-    return text.replace(
-      /(%[\w\s]+%)/g,
-      (match) =>
-        `<span class="bg-blue-600 px-2 py-[2px] font-semibold leading-none inline-flex align-center items-center text-white rounded-full">${match}</span>`
-    );
-  };
-
-  const handleBlur = (event: any) => {
-    handleChange(event);
-    setIsFocused(false);
-  };
-
-  const handleFocus = () => {
-    setIsFocused(true);
-  };
+  const text = nodeData[id]?.content || "";
 
   return (
-    <div
-      contentEditable
-      className="nodrag cursor-text min-h-[80px] max-h-[200px] bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
-      onBlur={handleBlur}
-      onFocus={handleFocus}
-      dangerouslySetInnerHTML={{
-        __html: isFocused ? text : stylizeVariables(text),
-      }}
-    ></div>
+    <div className="nodrag overflow-y-auto cursor-text max-h-[200px] bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white">
+      <HighlightWithinTextarea
+        value={text}
+        placeholder="Digite o conteúdo da mensagem"
+        highlight={[
+          {
+            highlight: /%[^%]+%/g,
+            className: "bg-blue-500 rounded-full px-1 text-white font-bold",
+          },
+        ]}
+        onChange={handleChange}
+      />
+    </div>
+    // <div
+    //   contentEditable
+    //   className="nodrag cursor-text min-h-[80px] max-h-[200px] bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+    //   onBlur={handleBlur}
+    //   onFocus={handleFocus}
+    //   dangerouslySetInnerHTML={{
+    //     __html: isFocused ? text : stylizeVariables(text),
+    //   }}
+    // ></div>
   );
 });
 

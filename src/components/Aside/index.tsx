@@ -36,7 +36,7 @@ const logic = [
     color: "bg-green-400",
   },
   {
-    label: "Capturar",
+    label: "Perguntar",
     type: "captureTextNode",
     icon: <FaEnvelope />,
     color: "bg-green-400",

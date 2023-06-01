@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import NavBar from "../components/NavBar";
 
 import { confirmAlert } from "react-confirm-alert";
-import "react-confirm-alert/src/react-confirm-alert.css";
 
 import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
