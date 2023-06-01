@@ -63,7 +63,10 @@ export function DefaultEdge(props: EdgeProps) {
         // data-tooltip-id="my-tooltip"
         onMouseEnter={() => setShowEdgeDeleteLabel(true)}
         onMouseLeave={() => setShowEdgeDeleteLabel(false)}
-        onClick={() => data.handleDeleteEdge(id)}
+        onClick={() => {
+          setShowEdgeDeleteLabel(false);
+          data.handleDeleteEdge(id);
+        }}
         // data-tooltip-content="Hello world!"
         className="edge-flow-selector bg-red-300 stroke-[80px] fill-none stroke-transparent"
         d={edgePath}
