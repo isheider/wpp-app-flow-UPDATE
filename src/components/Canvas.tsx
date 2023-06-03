@@ -22,6 +22,8 @@ import ReactFlow, {
   getConnectedEdges,
 } from "reactflow";
 
+import MidiaUploadModal from "./MidiaUploadModal";
+
 import { Oval } from "react-loader-spinner";
 
 import { useParams, useNavigate } from "react-router-dom";
@@ -36,10 +38,11 @@ import CompareTextNode from "./CompareTextNode";
 import MessageNode from "./MessageNode";
 import NavBar from "./NavBar";
 import MidiaNode from "./Nodes/midias/MidiaNode";
-import ImageNode from "./Nodes/SendImageNode";
-import VideoNode from "./Nodes/SendVideoNode";
-import AudioNode from "./Nodes/SendAudioNode";
-import DocumentNode from "./Nodes/SendDocumentNode";
+import ImageNode from "./Nodes/midias/ImageMidiaNode";
+import VideoNode from "./Nodes/midias/VideoMidiaNode";
+import RecordingNode from "./Nodes/midias/RecordingMidiaNode";
+import AudioNode from "./Nodes/midias/AudioMidiaNode";
+import DocumentNode from "./Nodes/midias/DocumentMidiaNode";
 import SetVariableNode from "./Nodes/SetVariableNode";
 import DelayNode from "./Nodes/DelayNode";
 import StartNode from "./Nodes/StartNode";
@@ -79,11 +82,12 @@ const NODE_TYPES = {
   imageNode: ImageNode,
   midiaNode: MidiaNode,
   videoNode: VideoNode,
+  recordingNode: RecordingNode,
   audioNode: AudioNode,
+  documentNode: DocumentNode,
   delayNode: DelayNode,
   captureTextNode: CaptureTextNode,
   setVariableNode: SetVariableNode,
-  documentNode: DocumentNode,
   startNode: StartNode,
 };
 
@@ -727,6 +731,10 @@ export function Canvas() {
               term: removeAccents(m.term),
             }));
 
+            if (trigger.length === 0 || blocks.length === 0) {
+              throw new Error("error");
+            }
+
             var final = {
               name: "Flow",
               user: id,
@@ -1056,6 +1064,8 @@ export function Canvas() {
               <Controls />
               <Background gap={12} size={2} color={zinc["200"]} />
             </ReactFlow>
+
+            <MidiaUploadModal />
 
             {showEdgeDeleteLabel && (
               <div className="w-full  flex justify-center mx-auto absolute bottom-20 text-center z-50">

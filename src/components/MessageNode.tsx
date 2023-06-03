@@ -35,15 +35,6 @@ const MessageNodeComponent = memo(({ id }: any) => {
         onChange={handleChange}
       />
     </div>
-    // <div
-    //   contentEditable
-    //   className="nodrag cursor-text min-h-[80px] max-h-[200px] bg-gray-50 border border-gray-300 text-gray-900 text-base rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
-    //   onBlur={handleBlur}
-    //   onFocus={handleFocus}
-    //   dangerouslySetInnerHTML={{
-    //     __html: isFocused ? text : stylizeVariables(text),
-    //   }}
-    // ></div>
   );
 });
 

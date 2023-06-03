@@ -5,6 +5,7 @@ import {
   FaEnvelope,
   FaFilter,
   FaMicrophone,
+  FaMusic,
 } from "react-icons/fa";
 
 import { Link } from "react-router-dom";
@@ -59,25 +60,32 @@ const messages = [
   },
   {
     label: "Imagem",
-    type: "midiaNode",
+    type: "imageNode",
     icon: <AiFillPicture />,
     color: "bg-green-400",
   },
   {
+    label: "Áudio",
+    type: "audioNode",
+    icon: <FaMusic />,
+    color: "bg-green-400",
+  },
+  {
+    label: "Gravação de Áudio",
+    type: "recordingNode",
+    icon: <FaMicrophone />,
+    color: "bg-green-400",
+  },
+
+  {
     label: "Video",
-    type: "midiaNode",
+    type: "videoNode",
     icon: <AiFillVideoCamera />,
     color: "bg-green-400",
   },
   {
-    label: "Áudio",
-    type: "midiaNode",
-    icon: <FaMicrophone />,
-    color: "bg-green-400",
-  },
-  {
     label: "Documento",
-    type: "midiaNode",
+    type: "documentNode",
     icon: <MdOutlinePictureAsPdf />,
     color: "bg-green-400",
   },
