@@ -919,6 +919,29 @@ export function Canvas() {
     ]
   );
 
+    const [manualHookShow, setManualHookShow] = useState(false)
+
+    const handleManualHook = useCallback(async (target, hook) => {
+
+      await api.post('/wpp-api-custom-target', {
+        hook,
+        target
+      })
+
+    },[
+      nodes,
+      edges,
+      id,
+      checkSession,
+      nodeData,
+      templateId,
+      currentActive,
+      currentFlowName,
+      setNodes,
+      setEdges,
+      setNodeData,
+    ])
+
   useEffect(() => {
     console.log({
       nodes,
@@ -926,6 +949,68 @@ export function Canvas() {
       nodeData,
     });
   }, [nodes, edges, nodeData]);
+
+  const [numeroCliente, setNumeroCliente] = useState('');
+  const [gatilho, setGatilho] = useState('');
+
+  const handleChangeNumber = (event) => {
+    // Remove qualquer caractere não numérico
+    const numeroFormatado = event.target.value.replace(/\D/g, '');
+    setNumeroCliente(numeroFormatado);
+  };
+
+  const handleChangeHook = (event) => {
+    setGatilho(event.target.value);
+  };
+
+  const sendDirectMessage = useCallback(async () => {
+
+    if(gatilho === "" || numeroCliente === "") {
+      toast.error("Preencha os dados")
+      return;
+    }
+
+    if(numeroCliente.length < 12) {
+      toast.error("O número deve seguir o padrão correto, use o código do país, DDD, e o número sem o 9 da frente");
+      return;
+    }
+
+    setLoadingSave(true);
+    
+    await handleSave()
+
+    setGatilho('')
+    setNumeroCliente('')
+    
+    try {
+
+      
+      await handleManualHook(numeroCliente, gatilho)
+      toast.success("Mensagem enviada, aguarde para verificar se o envio foi bem sucedido.")
+      
+      setLoadingSave(false);
+    }catch(err) {
+      toast.error("Erro ao enviar fluxo, aguarde e tente novamente.")
+      
+      setLoadingSave(false);
+
+    }
+
+  }, [
+    gatilho,
+    numeroCliente,
+    nodes,
+    edges,
+    id,
+    checkSession,
+    nodeData,
+    templateId,
+    currentActive,
+    currentFlowName,
+    setNodes,
+    setEdges,
+    setNodeData,
+  ])
 
   async function handleChangeActive(active) {
     if (templateId) {
@@ -1097,6 +1182,74 @@ export function Canvas() {
             ) : (
               <>
                 <div className="flex items-center absolute right-10 top-10">
+                  {manualHookShow ? (
+                    <div 
+                    className="flex relative flex-col  justify-start"
+                    >
+                      <div
+                        className="flex"
+                      >
+                     <label htmlFor="countries" className="inline-block h-[40px] mr-4 text-sm font-medium text-gray-900 dark:text-white">
+        Selecione o gatilho
+      </label>
+      <select
+        id="countries"
+        className="inline-block h-[40px] mr-4 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 w-full  p-2.5 pr-8 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+        value={gatilho}
+        onChange={handleChangeHook}
+      >
+        <option value="">Escolha um dos gatilhos do fluxo</option>
+
+        {nodeData['1'].ways.map((way) => (
+          <option key={way.term} value={way.term}>
+            {way.term}
+          </option>
+        ))}
+      </select>
+                    <input type="text"
+                    placeholder="N° do cliente sem o 9 na frente"
+                      className="nodrag mr-4 overflow-y-auto cursor-text text-sm h-[40px] bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+
+                      value={numeroCliente}
+                    onChange={handleChangeNumber}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    
+                    />
+                    <button
+                    onClick={sendDirectMessage}
+                    className="text-white mr-4 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-zinc-600 dark:hover:bg-zinc-700 focus:outline-none dark:focus:ring-zinc-800"
+                    type="button"
+                    >
+                    Enviar
+                  </button>
+                    <button
+                    onClick={() => {
+                      setManualHookShow(false);
+                      setGatilho('');
+                      setNumeroCliente('');
+                    }}
+                    className="text-white mr-4 bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-zinc-600 dark:hover:bg-zinc-700 focus:outline-none dark:focus:ring-zinc-800"
+                    type="button"
+                    >
+                    Cancelar
+                  </button>
+</div>
+<p
+  className="absolute text-sm text-right text-gray-500 translate-y-1/2 -bottom-5"
+>Ao começar o fluxo manualmente, o fluxo será salvo automaticamente em seu estado atual.</p>
+                    </div>
+                  ) : (
+
+                    <button
+                    onClick={() => setManualHookShow(true)}
+                    className="text-white mr-4 bg-zinc-700 hover:bg-zinc-800 focus:ring-4 focus:ring-zinc-300 font-medium rounded-lg text-sm px-5 py-2.5 dark:bg-zinc-600 dark:hover:bg-zinc-700 focus:outline-none dark:focus:ring-zinc-800"
+                    type="button"
+                    >
+                    Disparo manual
+                  </button>
+                    
+                    )}
                   <button
                     // data-modal-target="popup-modal"
                     // data-modal-toggle="popup-modal"
