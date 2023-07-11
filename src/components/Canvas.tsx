@@ -977,6 +977,8 @@ export function Canvas() {
 
     setLoadingSave(true);
     
+    setManualHookShow(false);
+
     await handleSave()
 
     setGatilho('')
@@ -990,6 +992,7 @@ export function Canvas() {
       
       setLoadingSave(false);
     }catch(err) {
+
       toast.error("Erro ao enviar fluxo, aguarde e tente novamente.")
       
       setLoadingSave(false);
