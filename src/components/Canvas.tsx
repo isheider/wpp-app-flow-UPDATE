@@ -1209,13 +1209,17 @@ export function Canvas() {
           </option>
         ))}
       </select>
+      <label htmlFor="n-target" className="inline-block h-[40px] mr-4 text-sm font-medium text-gray-900 dark:text-white">
+      N° do cliente
+      </label>
                     <input type="text"
-                    placeholder="N° do cliente sem o 9 na frente"
-                      className="nodrag mr-4 overflow-y-auto cursor-text text-sm h-[40px] bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
+                    placeholder="55 + DDD + NÚMERO SEM O 9"
+                      className="nodrag mr-4 w-full overflow-y-auto cursor-text text-sm h-[40px] bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white"
 
                       value={numeroCliente}
                     onChange={handleChangeNumber}
                     inputMode="numeric"
+                    id="n-target"
                     pattern="[0-9]*"
                     
                     />
