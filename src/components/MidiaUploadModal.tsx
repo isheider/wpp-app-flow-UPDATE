@@ -6,6 +6,11 @@ import { useNodeData } from "../contexts/NodeDataContext";
 import { toast } from "react-toastify";
 import { Oval } from "react-loader-spinner";
 
+import { useParams, useNavigate } from "react-router-dom";
+
+
+import { useAuth } from "../contexts/AuthContext";
+
 function MidiaUploadModal() {
   const {
     nodeData,
@@ -24,8 +29,18 @@ function MidiaUploadModal() {
 
   const [loading, setLoading] = useState(true);
 
+  const { id, checkSession } = useAuth();
+  const { templateId } = useParams();
+
+
+  const navigate = useNavigate();
+
   // Carregar os uploads quando o componente é montado
   useEffect(() => {
+    if (templateId && checkSession) {
+      if (!id) {
+        navigate("/login");
+      } else {
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -38,9 +53,11 @@ function MidiaUploadModal() {
         setLoading(false);
       }
     };
-
+    
     fetchData();
-  }, []);
+  }}
+
+  }, [templateId, checkSession, id]);
 
   // Função para exibir os checkboxes com base no tipo de mídia selecionado
   const renderCheckboxes = (

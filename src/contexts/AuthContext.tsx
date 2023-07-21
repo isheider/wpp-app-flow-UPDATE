@@ -54,7 +54,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       } else {
         setToken(null);
-
+        setId(null)
         setCheckSession(true);
       }
     }
