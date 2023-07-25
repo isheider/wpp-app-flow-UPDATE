@@ -91,7 +91,7 @@ const SetVariableNode = memo(({ id, data: propsData }: any) => {
           color="bg-yellow-300"
           nodeId={id}
           handleDeleteNode={propsData.handleDeleteNode}
-          message="Capture o texto que o usuário digitar no chat"
+          message="Altere o valor de uma variável manualmente"
         />
         <Form ref={formRef} onSubmit={handleSubmit}>
           <h3 className="flex justify-between items-center mt-[-5px] mb-2 text-base font-medium text-gray-900 dark:text-white">
