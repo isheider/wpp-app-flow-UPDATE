@@ -147,7 +147,7 @@ export default function TemplatesList() {
           setLoadedStatus(true);
         }
         setLoadedStatus(true);
-      }, 10000);
+      }, 15000);
     }
   }
 
@@ -245,15 +245,6 @@ export default function TemplatesList() {
         } else {
           const responseStatus = await api.get(`/users/${id}/wpp-status`);
 
-          console.log(responseStatus);
-
-          const { data: flowsData } = await api.get("/templates");
-
-          if (flowsData) {
-            setFlows(flowsData);
-            setLoadingFlows(false);
-          }
-
           if (
             !responseStatus.data.error &&
             responseStatus.data.state === "open" &&
@@ -272,6 +263,26 @@ export default function TemplatesList() {
           setLoadedStatus(true);
 
           hasRun.current = true;
+        }
+      }
+    }
+    load();
+  }, [id, checkSession]);
+
+  useEffect(() => {
+    async function load() {
+      setQrCode(null);
+
+      if (checkSession) {
+        if (!id) {
+          navigate("/login");
+        } else {
+          const { data: flowsData } = await api.get("/templates");
+
+          if (flowsData) {
+            setFlows(flowsData);
+            setLoadingFlows(false);
+          }
         }
       }
     }
@@ -321,15 +332,16 @@ export default function TemplatesList() {
         <div className="header mb-10 flex flex-col items-start justify-between ">
           <h1 className="text-3xl  font-bold">
             Conexão com celular{" "}
-            {connected ? (
-              <span className="bg-green-100 text-green-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">
-                Online
-              </span>
-            ) : (
-              <span className="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">
-                Requer conexão
-              </span>
-            )}
+            {loadedStatus &&
+              (connected ? (
+                <span className="bg-green-100 text-green-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">
+                  Online
+                </span>
+              ) : (
+                <span className="bg-red-100 text-red-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">
+                  Requer conexão
+                </span>
+              ))}
           </h1>
           {connected && instance && (
             <div className="flex items-center flex-row">
@@ -345,7 +357,7 @@ export default function TemplatesList() {
               </button>
             </div>
           )}
-          {loadedStatus &&
+          {loadedStatus ? (
             !connected &&
             (canShowQr ? (
               <>
@@ -381,7 +393,23 @@ export default function TemplatesList() {
               >
                 Conectar com Whatsapp
               </button>
-            ))}
+            ))
+          ) : (
+            <>
+              <Oval
+                height={80}
+                width={80}
+                color="green"
+                wrapperStyle={{}}
+                wrapperClass=""
+                visible={true}
+                ariaLabel="oval-loading"
+                secondaryColor="green"
+                strokeWidth={2}
+                strokeWidthSecondary={2}
+              />
+            </>
+          )}
         </div>
         <div className="header flex justify-between items-center">
           <h1 className="text-5xl mb-10 font-bold">Fluxos</h1>

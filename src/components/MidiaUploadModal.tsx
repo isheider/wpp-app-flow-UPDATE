@@ -8,7 +8,6 @@ import { Oval } from "react-loader-spinner";
 
 import { useParams, useNavigate } from "react-router-dom";
 
-
 import { useAuth } from "../contexts/AuthContext";
 
 function MidiaUploadModal() {
@@ -32,7 +31,6 @@ function MidiaUploadModal() {
   const { id, checkSession } = useAuth();
   const { templateId } = useParams();
 
-
   const navigate = useNavigate();
 
   // Carregar os uploads quando o componente é montado
@@ -41,22 +39,22 @@ function MidiaUploadModal() {
       if (!id) {
         navigate("/login");
       } else {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const res = await api.get("/get-profile-uploads"); // Ajuste a URL conforme necessário
-        setUploads(res.data);
-        setLoading(false);
-      } catch (err) {
-        console.error(err);
-        setUploads({});
-        setLoading(false);
-      }
-    };
-    
-    fetchData();
-  }}
+        const fetchData = async () => {
+          try {
+            setLoading(true);
+            const res = await api.get("/get-profile-uploads"); // Ajuste a URL conforme necessário
+            setUploads(res.data);
+            setLoading(false);
+          } catch (err) {
+            console.error(err);
+            setUploads({});
+            setLoading(false);
+          }
+        };
 
+        fetchData();
+      }
+    }
   }, [templateId, checkSession, id]);
 
   // Função para exibir os checkboxes com base no tipo de mídia selecionado
@@ -202,7 +200,11 @@ function MidiaUploadModal() {
         : currentTab === "audio"
         ? { "audio/*": [] }
         : currentTab === "recording"
-        ? { "audio/ogg": [".ogg"] }
+        ? {
+            "audio/ogg": [".ogg"],
+            "audio/mp4": [".mp4"],
+            "video/mp4": [".mp4"],
+          }
         : currentTab === "others"
         ? { "*/*": [] }
         : {},
@@ -318,7 +320,7 @@ function MidiaUploadModal() {
                               case "audio":
                                 return "ARQUIVOS DE ÁUDIO (MAX. 10mb)";
                               case "recording":
-                                return ".OGG (APENAS) (MAX. 10mb)";
+                                return ".OGG OU .MP4 (APENAS) (MAX. 10mb)";
                               case "others":
                                 return "DOCUMENTOS (MAX. 10mb)";
                             }
