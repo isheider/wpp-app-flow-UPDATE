@@ -147,7 +147,7 @@ export default function TemplatesList() {
           setLoadedStatus(true);
         }
         setLoadedStatus(true);
-      }, 15000);
+      }, 20000);
     }
   }
 
